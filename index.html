@@ -9,87 +9,615 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Watchlist">
 
-  <!-- Firebase Modular SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { 
-      getFirestore, doc, setDoc, getDoc, onSnapshot 
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
+    import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     window.FB = { initializeApp, getFirestore, doc, setDoc, getDoc, onSnapshot };
-    window.dispatchEvent(new Event('firebase-sdk-ready'));
+    window.dispatchEvent(new Event('firebase-ready'));
   </script>
 
   <style>
     :root {
-      --bg-cream: #FAF7F2;
+      --bg: #FAF7F2;
       --card-bg: #FFFFFF;
       --green-dark: #1B4332;
       --green-primary: #2D6A4F;
-      --green-subtle: #D8F3DC;
-      --text-dark: #1F2937;
-      --text-muted: #526058;
-      --border-color: #E2DBD0;
-      --badge-bg: #EAE5D9;
-      --warning-bg: #FFF3CD;
-      --warning-text: #856404;
+      --green-light: #D8F3DC;
+      --text: #1F2937;
+      --muted: #526058;
+      --border: #E2DBD0;
+      --badge: #EAE5D9;
+      --warn-bg: #FFF3CD;
+      --warn-txt: #856404;
       --radius: 12px;
-      --shadow: 0 4px 12px rgba(27, 67, 50, 0.08);
+      --shadow: 0 4px 12px rgba(27,67,50,0.08);
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg-cream);
-      color: var(--text-dark);
-      line-height: 1.4;
-      padding-bottom: 90px;
-    }
-
-    header {
-      background: var(--green-dark);
-      color: #FAF7F2;
-      padding: 14px 16px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    }
-    header h1 { font-size: 1.25rem; font-weight: 700; }
-    .status-pill {
-      font-size: 0.75rem;
-      padding: 4px 8px;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.15);
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.4; padding-bottom: 80px; }
+    header { background: var(--green-dark); color: #FAF7F2; padding: 12px 16px; position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+    header h1 { font-size: 1.15rem; font-weight: 700; }
+    .status-pill { font-size: 0.75rem; padding: 4px 8px; border-radius: 12px; background: rgba(255,255,255,0.15); display: flex; align-items: center; gap: 5px; }
     .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #95D5B2; }
     .status-dot.error { background: #FF6B6B; }
-
-    .nav-scroll {
-      display: flex;
-      gap: 8px;
-      padding: 10px 16px;
-      overflow-x: auto;
-      background: #FFFFFF;
-      border-bottom: 1px solid var(--border-color);
-      white-space: nowrap;
-      scrollbar-width: none;
-    }
+    .nav-scroll { display: flex; gap: 8px; padding: 10px 16px; overflow-x: auto; background: #fff; border-bottom: 1px solid var(--border); white-space: nowrap; scrollbar-width: none; }
     .nav-scroll::-webkit-scrollbar { display: none; }
-    .nav-tab {
-      background: var(--badge-bg);
-      border: 1px solid transparent;
-      padding: 7px 12px;
-      border-radius: 20px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      cursor: pointer;
+    .nav-tab { background: var(--badge); border: 1px solid transparent; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; color: var(--muted); cursor: pointer; }
+    .nav-tab.active { background: var(--green-primary); color: #fff; }
+    .search-box { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .input-row { display: flex; gap: 8px; }
+    input, select, textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; background: #fff; font-size: 0.9rem; color: var(--text); }
+    .btn { background: var(--green-primary); color: #fff; border: none; padding: 9px 14px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn-secondary { background: var(--badge); color: var(--text); }
+    .btn-outline { background: transparent; border: 1px solid var(--green-primary); color: var(--green-primary); }
+    .catalog-grid { display: flex; flex-direction: column; gap: 14px; padding: 4px 16px; }
+    .card { background: var(--card-bg); border-radius: var(--radius); border: 1px solid var(--border); padding: 12px; display: flex; gap: 12px; box-shadow: var(--shadow); }
+    .cover-thumb-wrap { width: 90px; min-width: 90px; height: 135px; border-radius: 8px; overflow: hidden; background: var(--badge); cursor: pointer; }
+    .cover-thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .card-body { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+    .card-title { font-size: 0.95rem; font-weight: 700; color: var(--green-dark); }
+    .card-meta { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+    .card-summary { font-size: 0.8rem; color: var(--text); margin: 6px 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .badge-bar { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0; }
+    .badge { font-size: 0.68rem; padding: 2px 6px; border-radius: 4px; background: var(--badge); color: var(--text); font-weight: 500; }
+    .badge-green { background: var(--green-light); color: var(--green-dark); }
+    .list-picker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 8px; }
+    .list-chip { background: var(--badge); border: 1px solid transparent; border-radius: 6px; padding: 6px 2px; font-size: 0.68rem; font-weight: 600; text-align: center; cursor: pointer; }
+    .list-chip.selected { background: var(--green-primary); color: #fff; }
+    .note-row { margin-top: 6px; }
+    .note-input { font-size: 0.78rem; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; width: 100%; }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .modal-box { background: #fff; width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .modal-img { width: 100%; max-height: 45vh; object-fit: contain; border-radius: 8px; background: #000; }
+    .hidden { display: none !important; }
+    .dock-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 58px; background: #fff; border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 90; }
+    .dock-btn { display: flex; flex-direction: column; align-items: center; font-size: 0.72rem; color: var(--muted); border: none; background: transparent; cursor: pointer; }
+    .dock-btn.active { color: var(--green-primary); font-weight: 700; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1>Our Watchlist</h1>
+      <div id="householdDisplay" style="font-size:0.75rem; color:#D8F3DC;">Local Mode (Tap Login to Sync)</div>
+    </div>
+    <div class="status-pill">
+      <div id="syncDot" class="status-dot"></div>
+      <span id="syncText">Ready</span>
+    </div>
+  </header>
+
+  <div class="nav-scroll" id="listNav">
+    <button class="nav-tab active" data-list="all">All (<span id="cnt-all">0</span>)</button>
+    <button class="nav-tab" data-list="uncategorized">Uncategorized (<span id="cnt-uncategorized">0</span>)</button>
+    <button class="nav-tab" data-list="watchlist">Watchlist (<span id="cnt-watchlist">0</span>)</button>
+    <button class="nav-tab" data-list="kids">Kids watchlist (<span id="cnt-kids">0</span>)</button>
+    <button class="nav-tab" data-list="later">See later (<span id="cnt-later">0</span>)</button>
+    <button class="nav-tab" data-list="seen">Seen (<span id="cnt-seen">0</span>)</button>
+    <button class="nav-tab" data-list="again">See again (<span id="cnt-again">0</span>)</button>
+    <button class="nav-tab" data-list="maybe">Not sure (<span id="cnt-maybe">0</span>)</button>
+    <button class="nav-tab" data-list="no">Not interested (<span id="cnt-no">0</span>)</button>
+  </div>
+
+  <section class="search-box">
+    <input type="search" id="searchInput" placeholder="Search titles, cast, summaries...">
+    <div class="input-row">
+      <select id="formatFilter">
+        <option value="">All Formats</option>
+        <option value="Movie">Movies</option>
+        <option value="TV">TV Series</option>
+      </select>
+      <select id="collectionFilter">
+        <option value="">All Collections</option>
+        <option value="startHere">Start-Here Shortlist</option>
+        <option value="family">Kids & Family</option>
+        <option value="parenting">Parenting Comedies</option>
+        <option value="renovation">Home & Renovation</option>
+        <option value="2025-2026">2025–2026 Releases</option>
+        <option value="userAdded">User-Added</option>
+      </select>
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; color:var(--muted);">
+      <label><input type="checkbox" id="hideCompleted"> Hide Seen & Pass</label>
+      <button class="btn-outline btn" id="undoBtn" style="padding:4px 8px; font-size:0.75rem;" disabled>Undo Move</button>
+    </div>
+  </section>
+
+  <main class="catalog-grid" id="catalogFeed"></main>
+  <div id="loadMoreContainer" style="padding: 16px; text-align: center;">
+    <button class="btn btn-secondary" id="loadMoreBtn" style="width:100%;">Load More</button>
+  </div>
+
+  <nav class="dock-nav">
+    <button class="dock-btn active" id="dockDiscover"><span>🎬</span>Titles</button>
+    <button class="dock-btn" id="dockExpand"><span>➕</span>Expand Database</button>
+    <button class="dock-btn" id="dockHousehold"><span>🔑</span>Login / Sync</button>
+    <button class="dock-btn" id="dockSettings"><span>⚙️</span>Settings</button>
+  </nav>
+
+  <!-- Cover & Trailer Modal -->
+  <div id="coverModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <h3 id="modalTitle" style="color:var(--green-dark);"></h3>
+      <p id="modalYearFormat" style="font-size:0.85rem; color:var(--muted);"></p>
+      <img id="modalImg" class="modal-img" alt="Cover preview">
+      <div id="modalTrailerContainer"></div>
+      <button class="btn btn-secondary" id="modalCloseBtn">Close</button>
+    </div>
+  </div>
+
+  <!-- Expand Database Modal -->
+  <div id="expandModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <h3>Expand Movie & TV Database</h3>
+      <div style="border-bottom: 1px solid var(--border); padding-bottom: 12px;">
+        <h4 style="font-size:0.88rem; margin-bottom:4px;">Search & Auto-Add TV Shows</h4>
+        <p style="font-size:0.76rem; color:var(--muted); margin-bottom:6px;">Instantly fetch cast, plot, and cover poster via TVmaze.</p>
+        <div style="display:flex; gap:6px;">
+          <input type="text" id="tvSearchInput" placeholder="Show title (e.g. Severance)">
+          <button class="btn" id="tvSearchBtn">Search</button>
+        </div>
+        <div id="tvSearchResults" style="margin-top:8px; display:flex; flex-direction:column; gap:6px;"></div>
+      </div>
+
+      <div>
+        <h4 style="font-size:0.88rem; margin-bottom:4px;">Add Title Manually</h4>
+        <form id="manualAddForm" style="display:flex; flex-direction:column; gap:8px;">
+          <input type="text" id="manTitle" placeholder="Title (e.g. Conclave)" required>
+          <div class="input-row">
+            <input type="number" id="manYear" placeholder="Year" value="2026" required style="width:50%;">
+            <select id="manFormat" style="width:50%;">
+              <option value="Movie">Movie</option>
+              <option value="TV">TV Series</option>
+            </select>
+          </div>
+          <input type="text" id="manGenres" placeholder="Genres (e.g. Mystery, Thriller)">
+          <input type="text" id="manCast" placeholder="Cast">
+          <textarea id="manSummary" rows="2" placeholder="Summary"></textarea>
+          <input type="url" id="manCover" placeholder="Cover Image URL (optional)">
+          <button type="submit" class="btn" style="width:100%;">Add to Shared Watchlist</button>
+        </form>
+      </div>
+      <button class="btn btn-secondary" id="closeExpandModal">Close</button>
+    </div>
+  </div>
+
+  <!-- Household Login Modal -->
+  <div id="householdModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <h3>Household Sync Login</h3>
+      <p style="font-size:0.8rem; color:var(--muted);">
+        Enter a shared <strong>Username</strong> and <strong>Password</strong>.<br>
+        You set it up first; your husband enters the exact same credentials on his phone.
+      </p>
+      <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
+        <input type="text" id="loginUsername" placeholder="Household Username (e.g. smiths)">
+        <input type="password" id="loginPassword" placeholder="Password">
+        <button class="btn" id="submitLoginBtn" style="width:100%;">Connect & Sync</button>
+        <button class="btn btn-secondary hidden" id="logoutBtn" style="width:100%;">Disconnect</button>
+      </div>
+      <button class="btn btn-secondary" id="closeHouseholdModal">Close</button>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <h3>Settings & Import</h3>
+      <div>
+        <h4 style="font-size:0.85rem;">Cloud Storage (Firebase)</h4>
+        <p style="font-size:0.75rem; color:var(--muted); margin-bottom:4px;">Paste your Firebase Config JSON once to enable cloud sync:</p>
+        <textarea id="firebaseConfigInput" rows="3" placeholder='{"apiKey": "...", "projectId": "..."}'></textarea>
+        <button class="btn" id="saveConfigBtn" style="margin-top:6px; width:100%;">Save Cloud Config</button>
+      </div>
+      <div style="border-top:1px solid var(--border); padding-top:10px; margin-top:10px;">
+        <h4 style="font-size:0.85rem;">Import Backup JSON</h4>
+        <input type="file" id="backupFileInput" accept=".json">
+      </div>
+      <div style="border-top:1px solid var(--border); padding-top:10px; margin-top:10px;">
+        <h4 style="font-size:0.85rem;">Export Backup</h4>
+        <button class="btn btn-outline" id="exportBackupBtn" style="width:100%;">Download JSON Backup</button>
+      </div>
+      <button class="btn btn-secondary" id="closeSettingsModal" style="margin-top:10px;">Close</button>
+    </div>
+  </div>
+
+  <script type="module">
+    let catalog = [];
+    let householdData = { lists: {}, notes: {}, userTitles: [] };
+    let activeHousehold = null;
+    let lastMove = null;
+    let currentFilter = 'all';
+    let pageSize = 25;
+    let page = 1;
+    let db = null;
+
+    function initFirebase() {
+      const cfg = localStorage.getItem('ow_firebase_config');
+      if (!cfg || !window.FB) return;
+      try {
+        const parsed = JSON.parse(cfg);
+        const app = window.FB.initializeApp(parsed);
+        db = window.FB.getFirestore(app);
+        const savedUser = localStorage.getItem('ow_household_user');
+        const savedPass = localStorage.getItem('ow_household_pass');
+        if (savedUser && savedPass) connectHousehold(savedUser, savedPass, false);
+      } catch (err) { console.warn("Firebase config error:", err); }
     }
-    .nav-tab.active { background: var(--green-primary)
+    window.addEventListener('firebase-ready', initFirebase);
+
+    async function connectHousehold(username, password, showPrompt = true) {
+      username = username.toLowerCase().trim();
+      if (!username || !password) {
+        if (showPrompt) alert("Enter both username and password.");
+        return;
+      }
+      if (!db) {
+        activeHousehold = username;
+        localStorage.setItem('ow_household_user', username);
+        localStorage.setItem('ow_household_pass', password);
+        document.getElementById('householdDisplay').textContent = `Local: ${username}`;
+        document.getElementById('logoutBtn').classList.remove('hidden');
+        if (showPrompt) alert(`Connected locally as "${username}". Add Firebase config in Settings to sync between both phones.`);
+        hideAllModals();
+        return;
+      }
+      document.getElementById('syncText').textContent = 'Connecting...';
+      try {
+        const hhDocRef = window.FB.doc(db, "households", username);
+        const snap = await window.FB.getDoc(hhDocRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          if (data.passcode && data.passcode !== password) {
+            alert("Incorrect password for this household username.");
+            document.getElementById('syncText').textContent = 'Auth Failed';
+            document.getElementById('syncDot').classList.add('error');
+            return;
+          }
+        } else {
+          await window.FB.setDoc(hhDocRef, { passcode: password, created: new Date().toISOString(), lists: {}, notes: {}, userTitles: [] });
+        }
+        activeHousehold = username;
+        localStorage.setItem('ow_household_user', username);
+        localStorage.setItem('ow_household_pass', password);
+        document.getElementById('householdDisplay').textContent = `Synced: ${username}`;
+        document.getElementById('logoutBtn').classList.remove('hidden');
+        document.getElementById('syncDot').classList.remove('error');
+        document.getElementById('syncText').textContent = 'Connected';
+
+        window.FB.onSnapshot(hhDocRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const val = docSnap.data();
+            householdData.lists = val.lists || {};
+            householdData.notes = val.notes || {};
+            householdData.userTitles = val.userTitles || [];
+            updateCounts();
+            renderFeed();
+          }
+        });
+        if (showPrompt) { alert(`Connected to "${username}"! Your husband can now enter this same username and password.`); hideAllModals(); }
+      } catch (err) {
+        alert("Sync error: " + err.message);
+        document.getElementById('syncText').textContent = 'Offline';
+        document.getElementById('syncDot').classList.add('error');
+      }
+    }
+
+    async function pushHouseholdSync() {
+      if (!db || !activeHousehold) {
+        localStorage.setItem('ow_local_data', JSON.stringify(householdData));
+        return;
+      }
+      document.getElementById('syncText').textContent = 'Saving...';
+      try {
+        const hhDocRef = window.FB.doc(db, "households", activeHousehold);
+        await window.FB.setDoc(hhDocRef, { lists: householdData.lists, notes: householdData.notes, userTitles: householdData.userTitles }, { merge: true });
+        document.getElementById('syncText').textContent = 'Synced';
+        document.getElementById('syncDot').classList.remove('error');
+      } catch (e) {
+        document.getElementById('syncText').textContent = 'Not saved';
+        document.getElementById('syncDot').classList.add('error');
+      }
+    }
+
+    document.getElementById('submitLoginBtn').onclick = () => {
+      connectHousehold(document.getElementById('loginUsername').value, document.getElementById('loginPassword').value, true);
+    };
+
+    document.getElementById('logoutBtn').onclick = () => {
+      localStorage.removeItem('ow_household_user');
+      localStorage.removeItem('ow_household_pass');
+      activeHousehold = null;
+      document.getElementById('householdDisplay').textContent = 'Local Mode';
+      document.getElementById('logoutBtn').classList.add('hidden');
+      alert("Disconnected.");
+      hideAllModals();
+    };
+
+    async function loadCatalog() {
+      try {
+        const res = await fetch('catalog.json');
+        catalog = await res.json();
+      } catch (e) {
+        catalog = window.CATALOG_DATA || [];
+      }
+      const savedLocal = localStorage.getItem('ow_local_data');
+      if (savedLocal && !activeHousehold) {
+        try { Object.assign(householdData, JSON.parse(savedLocal)); } catch(e){}
+      }
+      updateCounts();
+      renderFeed();
+    }
+
+    window.setList = function(titleId, listName) {
+      const prev = householdData.lists[titleId] || 'uncategorized';
+      if (prev === listName) return;
+      lastMove = { titleId, prevList: prev, newList: listName };
+      document.getElementById('undoBtn').disabled = false;
+      if (listName === 'uncategorized') delete householdData.lists[titleId];
+      else householdData.lists[titleId] = listName;
+      updateCounts();
+      renderFeed();
+      pushHouseholdSync();
+    };
+
+    document.getElementById('undoBtn').onclick = () => {
+      if (!lastMove) return;
+      if (lastMove.prevList === 'uncategorized') delete householdData.lists[lastMove.titleId];
+      else householdData.lists[lastMove.titleId] = lastMove.prevList;
+      lastMove = null;
+      document.getElementById('undoBtn').disabled = true;
+      updateCounts();
+      renderFeed();
+      pushHouseholdSync();
+    };
+
+    window.saveNote = function(titleId, text) {
+      householdData.notes[titleId] = text.trim();
+      pushHouseholdSync();
+    };
+
+    function updateCounts() {
+      const counts = { all: catalog.length + householdData.userTitles.length, uncategorized: 0, watchlist: 0, kids: 0, later: 0, seen: 0, again: 0, maybe: 0, no: 0 };
+      const all = [...catalog, ...householdData.userTitles];
+      all.forEach(item => {
+        const assigned = householdData.lists[item.id] || 'uncategorized';
+        counts[assigned] = (counts[assigned] || 0) + 1;
+      });
+      for (let k in counts) {
+        const el = document.getElementById(`cnt-${k}`);
+        if (el) el.textContent = counts[k];
+      }
+    }
+
+    function renderFeed() {
+      const container = document.getElementById('catalogFeed');
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const format = document.getElementById('formatFilter').value;
+      const coll = document.getElementById('collectionFilter').value;
+      const hideDone = document.getElementById('hideCompleted').checked;
+      const combined = [...householdData.userTitles, ...catalog];
+
+      const filtered = combined.filter(item => {
+        const assigned = householdData.lists[item.id] || 'uncategorized';
+        if (currentFilter !== 'all' && assigned !== currentFilter) return false;
+        if (hideDone && (assigned === 'seen' || assigned === 'no')) return false;
+        if (format && item.format !== format) return false;
+        if (coll === 'startHere' && !item.shortlist) return false;
+        if (coll === 'family' && item.audience !== 'Family' && item.audience !== 'Little kids') return false;
+        if (coll === 'parenting' && !item.parentingComedy) return false;
+        if (coll === 'renovation' && !item.renovation) return false;
+        if (coll === '2025-2026' && !(item.year === 2025 || item.year === 2026)) return false;
+        if (coll === 'userAdded' && !item.userAdded) return false;
+        if (search) {
+          const matchTarget = `${item.title} ${item.cast || ''} ${item.summary || ''}`.toLowerCase();
+          if (!matchTarget.includes(search)) return false;
+        }
+        return true;
+      });
+
+      const display = filtered.slice(0, page * pageSize);
+      container.innerHTML = display.map(createCardHTML).join('');
+      document.getElementById('loadMoreContainer').style.display = display.length < filtered.length ? 'block' : 'none';
+    }
+
+    function createCardHTML(item) {
+      const assigned = householdData.lists[item.id] || 'uncategorized';
+      const note = householdData.notes[item.id] || '';
+      let seasonBadge = '';
+      if (item.format === 'TV' && item.latestSeason) {
+        const ls = item.latestSeason;
+        const endStr = ls.end ? `ended ${ls.end}` : (ls.status || 'End unverified');
+        seasonBadge = `<div class="badge badge-green" style="margin-top:4px;">Season ${ls.number} (${ls.premiere} to ${endStr})</div>`;
+      }
+
+      return `
+        <article class="card">
+          <div class="cover-thumb-wrap" onclick="openModal(${item.id})">
+            <img class="cover-thumb" src="${item.cover_url || ''}" alt="${item.title}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22140%22><rect fill=%22%23eee%22 width=%22100%22 height=%22140%22/><text x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2211%22 fill=%22%23666%22>No Cover</text></svg>'">
+          </div>
+          <div class="card-body">
+            <div>
+              <h2 class="card-title">${item.title}</h2>
+              <div class="card-meta">${item.year} • ${item.format} • ${item.platform || ''}</div>
+              <div class="badge-bar">
+                <span class="badge">${item.audience || 'General'}</span>
+                ${(item.genres || []).map(g => `<span class="badge">${g}</span>`).join('')}
+              </div>
+              ${seasonBadge}
+              <p class="card-summary">${item.summary || ''}</p>
+            </div>
+            <div>
+              <div class="list-picker-grid">
+                <button class="list-chip ${assigned === 'watchlist' ? 'selected' : ''}" onclick="setList(${item.id}, 'watchlist')">Watchlist</button>
+                <button class="list-chip ${assigned === 'kids' ? 'selected' : ''}" onclick="setList(${item.id}, 'kids')">Kids</button>
+                <button class="list-chip ${assigned === 'later' ? 'selected' : ''}" onclick="setList(${item.id}, 'later')">Later</button>
+                <button class="list-chip ${assigned === 'seen' ? 'selected' : ''}" onclick="setList(${item.id}, 'seen')">Seen</button>
+                <button class="list-chip ${assigned === 'again' ? 'selected' : ''}" onclick="setList(${item.id}, 'again')">Again</button>
+                <button class="list-chip ${assigned === 'maybe' ? 'selected' : ''}" onclick="setList(${item.id}, 'maybe')">Not sure</button>
+                <button class="list-chip ${assigned === 'no' ? 'selected' : ''}" onclick="setList(${item.id}, 'no')">Pass</button>
+                <button class="list-chip ${assigned === 'uncategorized' ? 'selected' : ''}" onclick="setList(${item.id}, 'uncategorized')">Reset</button>
+              </div>
+              <div class="note-row">
+                <input class="note-input" type="text" placeholder="Shared note..." value="${note}" onchange="saveNote(${item.id}, this.value)">
+              </div>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    window.openModal = function(id) {
+      const item = [...householdData.userTitles, ...catalog].find(x => x.id === id);
+      if (!item) return;
+      document.getElementById('modalTitle').textContent = item.title;
+      document.getElementById('modalYearFormat').textContent = `${item.year} • ${item.format} • ${item.platform || ''}`;
+      document.getElementById('modalImg').src = item.cover_url || '';
+      const trailerBox = document.getElementById('modalTrailerContainer');
+      if (item.trailerStatus === 'official_channel_listed' && item.trailerUrl) {
+        trailerBox.innerHTML = `<div style="font-size:0.8rem; margin:6px 0;">Official Studio Trailer (${item.trailerChannel || 'Studio'})</div><a href="${item.trailerUrl}" target="_blank" class="btn" style="width:100%;">▶ Watch Official Trailer</a>`;
+      } else {
+        const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(item.title + ' ' + item.year + ' official trailer')}`;
+        trailerBox.innerHTML = `<div style="font-size:0.8rem; margin:6px 0; color:var(--muted);">No verified link cataloged.</div><a href="${searchUrl}" target="_blank" class="btn btn-secondary" style="width:100%;">🔍 Find Trailer on YouTube</a>`;
+      }
+      document.getElementById('coverModal').classList.remove('hidden');
+    };
+    document.getElementById('modalCloseBtn').onclick = () => document.getElementById('coverModal').classList.add('hidden');
+
+    document.getElementById('tvSearchBtn').onclick = async () => {
+      const q = document.getElementById('tvSearchInput').value.trim();
+      if (!q) return;
+      const resContainer = document.getElementById('tvSearchResults');
+      resContainer.innerHTML = '<div style="font-size:0.8rem;">Searching TVmaze...</div>';
+      try {
+        const resp = await fetch(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(q)}`);
+        const results = await resp.json();
+        if (results.length === 0) { resContainer.innerHTML = '<div style="font-size:0.8rem; color:var(--muted);">No shows found.</div>'; return; }
+        resContainer.innerHTML = results.slice(0, 4).map(r => {
+          const s = r.show;
+          const yr = s.premiered ? s.premiered.slice(0, 4) : 'TV';
+          const img = s.image ? s.image.medium : '';
+          return `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#eee; padding:6px; border-radius:6px;">
+              <span style="font-size:0.8rem;"><strong>${s.name}</strong> (${yr})</span>
+              <button class="btn" style="padding:4px 8px; font-size:0.75rem;" onclick='addTVmazeShow(${JSON.stringify(s.name)}, "${yr}", ${JSON.stringify(img)}, ${JSON.stringify(s.summary ? s.summary.replace(/<[^>]*>/g, '') : '')}, ${JSON.stringify(s.genres||[])})'>+ Add</button>
+            </div>
+          `;
+        }).join('');
+      } catch (err) { resContainer.innerHTML = '<div style="font-size:0.8rem; color:#c00;">Search failed.</div>'; }
+    };
+
+    window.addTVmazeShow = function(name, year, cover, summary, genres) {
+      const newShow = { id: -Date.now(), title: name, year: parseInt(year) || 2025, format: 'TV', genres: genres, summary: summary, cover_url: cover, audience: 'General', userAdded: true };
+      householdData.userTitles.push(newShow);
+      householdData.lists[newShow.id] = 'watchlist';
+      pushHouseholdSync();
+      updateCounts();
+      renderFeed();
+      alert(`"${name}" added to Watchlist!`);
+      hideAllModals();
+    };
+
+    document.getElementById('manualAddForm').onsubmit = (e) => {
+      e.preventDefault();
+      const newTitle = {
+        id: -Date.now(),
+        title: document.getElementById('manTitle').value.trim(),
+        year: parseInt(document.getElementById('manYear').value) || 2026,
+        format: document.getElementById('manFormat').value,
+        genres: document.getElementById('manGenres').value.split(',').map(s=>s.trim()).filter(Boolean),
+        cast: document.getElementById('manCast').value.trim(),
+        summary: document.getElementById('manSummary').value.trim(),
+        cover_url: document.getElementById('manCover').value.trim(),
+        audience: 'User-added',
+        userAdded: true
+      };
+      householdData.userTitles.push(newTitle);
+      householdData.lists[newTitle.id] = 'watchlist';
+      pushHouseholdSync();
+      updateCounts();
+      renderFeed();
+      alert(`"${newTitle.title}" added to Watchlist!`);
+      hideAllModals();
+    };
+
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentFilter = tab.getAttribute('data-list');
+        page = 1;
+        renderFeed();
+      };
+    });
+
+    document.getElementById('searchInput').oninput = () => { page = 1; renderFeed(); };
+    document.getElementById('formatFilter').onchange = () => { page = 1; renderFeed(); };
+    document.getElementById('collectionFilter').onchange = () => { page = 1; renderFeed(); };
+    document.getElementById('hideCompleted').onchange = () => { page = 1; renderFeed(); };
+    document.getElementById('loadMoreBtn').onclick = () => { page++; renderFeed(); };
+
+    document.getElementById('dockDiscover').onclick = () => hideAllModals();
+    document.getElementById('dockExpand').onclick = () => { hideAllModals(); document.getElementById('expandModal').classList.remove('hidden'); };
+    document.getElementById('dockHousehold').onclick = () => { hideAllModals(); document.getElementById('householdModal').classList.remove('hidden'); };
+    document.getElementById('dockSettings').onclick = () => { hideAllModals(); document.getElementById('settingsModal').classList.remove('hidden'); };
+
+    function hideAllModals() {
+      ['coverModal', 'expandModal', 'householdModal', 'settingsModal'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+    }
+    document.getElementById('closeExpandModal').onclick = hideAllModals;
+    document.getElementById('closeHouseholdModal').onclick = hideAllModals;
+    document.getElementById('closeSettingsModal').onclick = hideAllModals;
+
+    document.getElementById('saveConfigBtn').onclick = () => {
+      const raw = document.getElementById('firebaseConfigInput').value.trim();
+      try {
+        JSON.parse(raw);
+        localStorage.setItem('ow_firebase_config', raw);
+        alert("Config saved! Reloading...");
+        window.location.reload();
+      } catch (e) { alert("Invalid JSON config format."); }
+    };
+
+    document.getElementById('backupFileInput').onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (evt) => {
+        try {
+          const imported = JSON.parse(evt.target.result);
+          if (Array.isArray(imported)) {
+            catalog.push(...imported);
+            alert(`Added ${imported.length} titles!`);
+          } else if (imported.lists) {
+            const map = { unsorted: 'uncategorized', watchlist: 'watchlist', kids: 'kids', later: 'later', seen: 'seen', again: 'again', maybe: 'maybe', no: 'no' };
+            for (let id in imported.lists) {
+              const mapped = map[imported.lists[id]] || 'uncategorized';
+              if (mapped !== 'uncategorized') householdData.lists[id] = mapped;
+            }
+            if (imported.notes) Object.assign(householdData.notes, imported.notes);
+            if (imported.customTitles) householdData.userTitles = imported.customTitles;
+            alert("Backup restored!");
+          }
+          pushHouseholdSync();
+          updateCounts();
+          renderFeed();
+        } catch (err) { alert("Import failed: " + err.message); }
+      };
+      reader.readAsText(file);
+    };
+
+    document.getElementById('exportBackupBtn').onclick = () => {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(householdData, null, 2));
+      const a = document.createElement('a');
+      a.setAttribute("href", dataStr);
+      a.setAttribute("download", `watchlist-backup-${new Date().toISOString().slice(0,10)}.json`);
+      a.click();
+    };
+
+    loadCatalog();
+  </script>
+</body>
+</html>
