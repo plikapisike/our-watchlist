@@ -27,6 +27,7 @@
       --muted: #526058;
       --border: #E2DBD0;
       --badge: #EAE5D9;
+      --gold: #F59E0B;
       --radius: 12px;
       --shadow: 0 4px 12px rgba(27,67,50,0.08);
     }
@@ -42,27 +43,44 @@
     .nav-scroll::-webkit-scrollbar { display: none; }
     .nav-tab { background: var(--badge); border: 1px solid transparent; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; color: var(--muted); cursor: pointer; }
     .nav-tab.active { background: var(--green-primary); color: #fff; }
+    .nav-tab.special { background: #FFE8D6; color: #B05D24; }
+    .nav-tab.special.active { background: #B05D24; color: #fff; }
     .nav-manage-btn { background: transparent; border: 1px dashed var(--green-primary); color: var(--green-primary); padding: 5px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
 
-    .search-box { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .search-box { padding: 10px 16px; display: flex; flex-direction: column; gap: 8px; }
     .input-row { display: flex; gap: 8px; }
-    input, select, textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; background: #fff; font-size: 0.88rem; color: var(--text); }
-    .btn { background: var(--green-primary); color: #fff; border: none; padding: 9px 14px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    input, select, textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: #fff; font-size: 0.88rem; color: var(--text); }
+    .btn { background: var(--green-primary); color: #fff; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
     .btn-secondary { background: var(--badge); color: var(--text); }
     .btn-outline { background: transparent; border: 1px solid var(--green-primary); color: var(--green-primary); }
+    .btn-fresh { background: #D97706; color: #fff; }
     .btn-danger { background: #E63946; color: #fff; }
     
+    .toolbar-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--muted); padding-top: 4px; }
+
     .catalog-grid { display: flex; flex-direction: column; gap: 14px; padding: 4px 16px; }
-    .card { background: var(--card-bg); border-radius: var(--radius); border: 1px solid var(--border); padding: 12px; display: flex; gap: 12px; box-shadow: var(--shadow); }
+    .card { background: var(--card-bg); border-radius: var(--radius); border: 1px solid var(--border); padding: 12px; display: flex; gap: 12px; box-shadow: var(--shadow); position: relative; }
     .cover-thumb-wrap { width: 90px; min-width: 90px; height: 135px; border-radius: 8px; overflow: hidden; background: var(--badge); cursor: pointer; }
     .cover-thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
     .card-body { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
     .card-title { font-size: 0.95rem; font-weight: 700; color: var(--green-dark); }
     .card-meta { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
     .card-summary { font-size: 0.8rem; color: var(--text); margin: 6px 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    
+    .reaction-bar { display: flex; align-items: center; justify-content: space-between; margin: 4px 0; flex-wrap: wrap; gap: 4px; }
+    .stars-wrap { display: inline-flex; align-items: center; gap: 2px; }
+    .star-btn { font-size: 1.15rem; color: #D1D5DB; background: none; border: none; cursor: pointer; padding: 0 1px; line-height: 1; }
+    .star-btn.filled { color: var(--gold); }
+    .react-pills { display: flex; gap: 4px; }
+    .react-btn { background: var(--badge); border: 1px solid transparent; border-radius: 6px; padding: 2px 6px; font-size: 0.7rem; font-weight: 600; cursor: pointer; }
+    .react-btn.fav.active { background: #FFD1D1; color: #C9184A; border-color: #C9184A; }
+    .react-btn.good.active { background: #D8F3DC; color: #1B4332; border-color: #1B4332; }
+
     .badge-bar { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0; }
     .badge { font-size: 0.68rem; padding: 2px 6px; border-radius: 4px; background: var(--badge); color: var(--text); font-weight: 500; }
     .badge-green { background: var(--green-light); color: var(--green-dark); }
+    .badge-match { background: #E0AAFF; color: #3C096C; font-weight: 600; }
+    .badge-fresh { background: #FEF3C7; color: #92400E; font-weight: 600; }
     
     .list-picker-grid { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
     .list-chip { background: var(--badge); border: 1px solid transparent; border-radius: 6px; padding: 6px 8px; font-size: 0.7rem; font-weight: 600; text-align: center; cursor: pointer; flex-grow: 1; }
@@ -97,11 +115,17 @@
     </div>
   </header>
 
-  <!-- Dynamic Navigation Bar with Manage Categories Button -->
+  <!-- Folder & Filter Tabs -->
   <div class="nav-scroll" id="listNav"></div>
 
   <section class="search-box">
-    <input type="search" id="searchInput" placeholder="Search titles, cast, summaries...">
+    <div style="display:flex; gap:6px;">
+      <input type="search" id="searchInput" placeholder="Search title, cast, plot..." style="flex:1;">
+      <button class="btn btn-fresh" id="fetchFresh20Btn" title="Pull 20 new movies/shows released in the last 6 months">
+        🔥 Fresh 20
+      </button>
+    </div>
+    
     <div class="input-row">
       <select id="formatFilter">
         <option value="">All Formats</option>
@@ -111,42 +135,74 @@
       <select id="sortFilter">
         <option value="newest">Year: Newest First</option>
         <option value="oldest">Year: Oldest First</option>
+        <option value="rating_desc">Rating: Highest Stars (⭐)</option>
         <option value="title_asc">Title: A to Z</option>
         <option value="title_desc">Title: Z to A</option>
       </select>
     </div>
+
     <div class="input-row">
       <select id="collectionFilter" style="flex:1;">
         <option value="">All Collections</option>
+        <option value="favorites">❤️ Favorites</option>
+        <option value="good">👍 Good Movies & Shows</option>
+        <option value="high_rated">⭐ Rated 4+ Stars</option>
         <option value="startHere">Start-Here Shortlist</option>
         <option value="family">Kids & Family</option>
         <option value="parenting">Parenting Comedies</option>
         <option value="renovation">Home & Renovation</option>
         <option value="2019-2026">2019–2026 Releases</option>
-        <option value="userAdded">User / TMDB Added</option>
       </select>
-      <button class="btn btn-outline" id="openGenreFilterBtn" style="padding:4px 10px; font-size:0.78rem;">
-        🚫 Exclude (<span id="excludeCountBadge">0</span>)
+      <button class="btn btn-outline" id="openGenreFilterBtn" style="padding:4px 8px; font-size:0.75rem;">
+        🚫 Exclude (<span id="excludeCountBadge">2</span>)
+      </button>
+      <button class="btn btn-outline" id="pickRandomBtn" style="padding:4px 8px; font-size:0.75rem;" title="Pick a random title for tonight!">
+        🎲 Pick
+      </button>
+      <button class="btn btn-outline" id="shareListBtn" style="padding:4px 8px; font-size:0.75rem;" title="Copy list to clipboard">
+        📤 Share
       </button>
     </div>
-    <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; color:var(--muted);">
-      <label><input type="checkbox" id="hideCompleted"> Hide Seen & Pass</label>
-      <button class="btn-outline btn" id="undoBtn" style="padding:4px 8px; font-size:0.75rem;" disabled>Undo Move</button>
+
+    <div class="toolbar-row">
+      <label style="cursor:pointer; display:flex; align-items:center; gap:6px;">
+        <input type="checkbox" id="hideCompleted"> 
+        <span>Hide Seen & Pass</span>
+      </label>
+      <button class="btn-outline btn" id="undoBtn" style="padding:3px 8px; font-size:0.75rem;" disabled>Undo Move</button>
     </div>
   </section>
 
+  <!-- Feed Grid -->
   <main class="catalog-grid" id="catalogFeed"></main>
+  
   <div id="loadMoreContainer" style="padding: 16px; text-align: center;">
     <button class="btn btn-secondary" id="loadMoreBtn" style="width:100%;">Load More</button>
   </div>
 
+  <!-- Bottom Navigation -->
   <nav class="dock-nav">
     <button class="dock-btn active" id="dockDiscover"><span>🎬</span>Titles</button>
-    <button class="dock-btn" id="dockImport"><span>📥</span>Import Titles</button>
-    <button class="dock-btn" id="dockCategories"><span>🏷️</span>Categories</button>
+    <button class="dock-btn" id="dockImport"><span>📥</span>Import 100</button>
+    <button class="dock-btn" id="dockCategories"><span>📁</span>Folders</button>
     <button class="dock-btn" id="dockHousehold"><span>🔑</span>Login / Sync</button>
     <button class="dock-btn" id="dockSettings"><span>⚙️</span>Settings</button>
   </nav>
+
+  <!-- Fresh 20 Releases Preview Modal -->
+  <div id="fresh20Modal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <h3 style="color:var(--green-dark);">🔥 Fresh 20 Releases</h3>
+      <p style="font-size:0.78rem; color:var(--muted);">
+        Popular non-Horror movies and series released in the past 6 months.
+      </p>
+      <div id="fresh20List" style="max-height:220px; overflow-y:auto; font-size:0.8rem; display:flex; flex-direction:column; gap:6px;"></div>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button class="btn btn-secondary" id="closeFresh20Btn" style="flex:1;">Cancel</button>
+        <button class="btn" id="commitFresh20Btn" style="flex:1;">Add All 20</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Cover & Trailer Modal -->
   <div id="coverModal" class="modal-backdrop hidden">
@@ -160,31 +216,43 @@
     </div>
   </div>
 
-  <!-- Genre Exclusion Filter Modal -->
-  <div id="genreModal" class="modal-backdrop hidden">
-    <div class="modal-box">
-      <h3 style="color:var(--green-dark);">Hide / Exclude Genres</h3>
-      <p style="font-size:0.78rem; color:var(--muted);">
-        Check any genre you want hidden from your feed and future imports. Horror is permanently excluded.
-      </p>
-      <div class="genre-grid" id="genreCheckboxList"></div>
-      <div style="display:flex; gap:8px; margin-top:8px;">
-        <button class="btn btn-secondary" id="resetExcludedGenresBtn" style="flex:1;">Clear Exclusions</button>
-        <button class="btn" id="saveExcludedGenresBtn" style="flex:1;">Save Exclusions</button>
+  <!-- Tonight's Pick (Roulette) Modal -->
+  <div id="rouletteModal" class="modal-backdrop hidden">
+    <div class="modal-box" style="text-align:center;">
+      <h3 style="color:var(--green-dark);">Tonight's Pick! 🎲</h3>
+      <div id="rouletteContent" style="margin:12px 0;"></div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-secondary" id="rerollBtn" style="flex:1;">Roll Again 🎲</button>
+        <button class="btn" id="closeRouletteBtn" style="flex:1;">Let's Watch!</button>
       </div>
     </div>
   </div>
 
-  <!-- Manage Categories / Lists Modal -->
+  <!-- Exclude Genres Modal -->
+  <div id="genreModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <h3 style="color:var(--green-dark);">Hide / Exclude Genres</h3>
+      <p style="font-size:0.78rem; color:var(--muted);">
+        Checked genres will be completely hidden from your feed and skipped during imports.
+      </p>
+      <div class="genre-grid" id="genreCheckboxList"></div>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button class="btn btn-secondary" id="resetExcludedGenresBtn" style="flex:1;">Reset</button>
+        <button class="btn" id="saveExcludedGenresBtn" style="flex:1;">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manage Lists / Folders Modal -->
   <div id="categoriesModal" class="modal-backdrop hidden">
     <div class="modal-box">
-      <h3 style="color:var(--green-dark);">Manage List Categories</h3>
+      <h3 style="color:var(--green-dark);">Manage Folders & Lists</h3>
       <p style="font-size:0.78rem; color:var(--muted);">
-        Rename, delete, or create categories. Any title in a deleted category moves safely to <strong>Uncategorized</strong>.
+        Rename, delete, or create folders. Deleting a folder safely moves its titles back to <strong>Inbox</strong>.
       </p>
       <div id="categoryManageList" style="max-height: 220px; overflow-y: auto;"></div>
       <div style="background:#F2EFE9; padding:10px; border-radius:8px; margin-top:8px;">
-        <label style="font-size:0.75rem; font-weight:600;">Create New Category:</label>
+        <label style="font-size:0.75rem; font-weight:600;">Create New Folder:</label>
         <div style="display:flex; gap:6px; margin-top:4px;">
           <input type="text" id="newCategoryInput" placeholder="e.g. Weekend Binge">
           <button class="btn" id="addCategoryBtn">Add</button>
@@ -194,11 +262,11 @@
     </div>
   </div>
 
-  <!-- Import More Titles Screen (TMDB API) -->
+  <!-- Smart 100-Title Importer -->
   <div id="importModal" class="modal-backdrop hidden">
     <div class="modal-box">
-      <h3 style="color:var(--green-dark);">Import More Titles (TMDB)</h3>
-      <p style="font-size:0.78rem; color:var(--muted);">Query TMDB directly. Automatically skips Horror and your excluded genres.</p>
+      <h3 style="color:var(--green-dark);">Import 100 Titles</h3>
+      
       <div style="background:#F2EFE9; padding:8px; border-radius:8px;">
         <label style="font-size:0.75rem; font-weight:600;">TMDB API Key (v3):</label>
         <div style="display:flex; gap:6px; margin-top:4px;">
@@ -206,16 +274,50 @@
           <button class="btn" id="saveTmdbKeyBtn" style="padding:4px 10px; font-size:0.75rem;">Save</button>
         </div>
       </div>
-      <div class="input-row">
-        <div>
-          <label style="font-size:0.72rem; color:var(--muted);">Start Year</label>
-          <input type="number" id="importStartYear" value="2019" min="1950" max="2026">
-        </div>
-        <div>
-          <label style="font-size:0.72rem; color:var(--muted);">End Year</label>
-          <input type="number" id="importEndYear" value="2026" min="1950" max="2026">
+
+      <div>
+        <label style="font-size:0.75rem; font-weight:600; color:var(--green-dark);">Import Strategy:</label>
+        <select id="importStrategySelect" style="margin-top:4px; font-weight:600;">
+          <option value="smart">🌟 Based on My Favorites, Good & High Ratings (⭐)</option>
+          <option value="standard">📅 By Specific Year & Category</option>
+        </select>
+      </div>
+
+      <div id="smartStrategyControls" style="display:flex; flex-direction:column; gap:6px; background:#F8F4EC; padding:8px; border-radius:8px; border:1px solid var(--border);">
+        <label style="font-size:0.72rem; color:var(--muted);">Inspiration Source:</label>
+        <select id="smartAnchorSelect">
+          <option value="all">Favorites, Good & 4-5★ Titles Combined</option>
+          <option value="stars_only">4-5 Star Ratings (⭐)</option>
+          <option value="fav_only">Favorites Only (❤️)</option>
+          <option value="good_only">Good Titles Only (👍)</option>
+        </select>
+      </div>
+
+      <div id="standardStrategyControls" class="hidden" style="display:flex; flex-direction:column; gap:6px;">
+        <div class="input-row">
+          <div>
+            <label style="font-size:0.72rem; color:var(--muted);">Release Year</label>
+            <input type="number" id="importYear" value="2021" min="1950" max="2026">
+          </div>
+          <div>
+            <label style="font-size:0.72rem; color:var(--muted);">Category</label>
+            <select id="importGenreSelect">
+              <option value="">All (Non-Horror)</option>
+              <option value="35">Comedy</option>
+              <option value="10751">Family</option>
+              <option value="16">Animation</option>
+              <option value="9648">Mystery</option>
+              <option value="18">Drama</option>
+              <option value="28">Action</option>
+              <option value="12">Adventure</option>
+              <option value="14">Fantasy</option>
+              <option value="10749">Romance</option>
+              <option value="878">Sci-Fi</option>
+            </select>
+          </div>
         </div>
       </div>
+
       <div class="input-row">
         <select id="importFormat">
           <option value="both">Movies & TV Series</option>
@@ -227,13 +329,16 @@
           <option value="">Any Language</option>
         </select>
       </div>
+
       <div id="importStatusBox" style="font-size:0.8rem; background:#fff; border:1px solid var(--border); padding:10px; border-radius:8px; max-height:160px; overflow-y:auto;">
-        Ready to fetch next batch.
+        Ready to pull 100 titles.
       </div>
+
       <div style="display:flex; gap:8px;">
-        <button class="btn" id="fetchTmdbBatchBtn" style="flex:1;">Preview Next 100</button>
+        <button class="btn" id="fetchTmdbBatchBtn" style="flex:1;">Pull 100 Titles</button>
         <button class="btn btn-outline hidden" id="commitTmdbBatchBtn" style="flex:1;">Add to Catalog</button>
       </div>
+
       <button class="btn btn-secondary" id="closeImportModal">Close</button>
     </div>
   </div>
@@ -295,17 +400,22 @@
     let householdData = {
       lists: {},
       notes: {},
+      favorites: {},      // titleId -> true
+      good: {},           // titleId -> true
+      ratings: {},        // titleId -> 1..5
       userTitles: [],
       categories: [...DEFAULT_CATEGORIES],
-      excludedGenres: ["War", "Western"] // War and Western hidden by default
+      excludedGenres: ["War", "Western"],
+      hideCompleted: true
     };
     let activeHousehold = null;
     let lastMove = null;
-    let currentFilter = 'all';
+    let currentFilter = 'all'; // Main screen shows all titles together!
     let pageSize = 25;
     let page = 1;
     let db = null;
     let pendingTmdbBatch = [];
+    let pendingFresh20 = [];
 
     // --- 1. Cloud Initializer ---
     function initFirebase() {
@@ -322,7 +432,7 @@
     }
     window.addEventListener('firebase-ready', initFirebase);
 
-    // --- 2. Shared Login ---
+    // --- 2. Shared Login & Sync ---
     async function connectHousehold(username, password, showPrompt = true) {
       username = username.toLowerCase().trim();
       if (!username || !password) {
@@ -357,9 +467,13 @@
             created: new Date().toISOString(), 
             lists: {}, 
             notes: {}, 
+            favorites: {},
+            good: {},
+            ratings: {},
             userTitles: [], 
             categories: DEFAULT_CATEGORIES,
-            excludedGenres: ["War", "Western"]
+            excludedGenres: ["War", "Western"],
+            hideCompleted: true
           });
         }
         activeHousehold = username;
@@ -375,9 +489,19 @@
             const val = docSnap.data();
             householdData.lists = val.lists || {};
             householdData.notes = val.notes || {};
+            householdData.favorites = val.favorites || {};
+            householdData.good = val.good || {};
+            householdData.ratings = val.ratings || {};
             householdData.userTitles = val.userTitles || [];
             householdData.categories = (val.categories && val.categories.length) ? val.categories : [...DEFAULT_CATEGORIES];
             householdData.excludedGenres = val.excludedGenres || ["War", "Western"];
+            
+            if (val.hideCompleted !== undefined) {
+              householdData.hideCompleted = val.hideCompleted;
+              document.getElementById('hideCompleted').checked = val.hideCompleted;
+              localStorage.setItem('ow_hide_completed', val.hideCompleted);
+            }
+
             updateExcludedBadge();
             renderNavTabs();
             renderFeed();
@@ -402,9 +526,13 @@
         await window.FB.setDoc(hhDocRef, { 
           lists: householdData.lists, 
           notes: householdData.notes, 
+          favorites: householdData.favorites,
+          good: householdData.good,
+          ratings: householdData.ratings,
           userTitles: householdData.userTitles,
           categories: householdData.categories,
-          excludedGenres: householdData.excludedGenres
+          excludedGenres: householdData.excludedGenres,
+          hideCompleted: householdData.hideCompleted
         }, { merge: true });
         document.getElementById('syncText').textContent = 'Synced';
         document.getElementById('syncDot').classList.remove('error');
@@ -428,7 +556,92 @@
       hideAllModals();
     };
 
-    // --- 3. Genre Exclusion Logic ---
+    // --- 3. Persistent Hide Completed ---
+    const savedHide = localStorage.getItem('ow_hide_completed');
+    if (savedHide !== null) {
+      householdData.hideCompleted = savedHide === 'true';
+    }
+    document.getElementById('hideCompleted').checked = householdData.hideCompleted;
+
+    document.getElementById('hideCompleted').onchange = (e) => {
+      householdData.hideCompleted = e.target.checked;
+      localStorage.setItem('ow_hide_completed', e.target.checked);
+      pushHouseholdSync();
+      page = 1;
+      renderFeed();
+    };
+
+    // --- 4. Star Ratings, Favorites & Good Toggles ---
+    window.setRating = function(titleId, stars) {
+      if (householdData.ratings[titleId] === stars) {
+        delete householdData.ratings[titleId]; // Tap same star to clear
+      } else {
+        householdData.ratings[titleId] = stars;
+      }
+      pushHouseholdSync();
+      renderFeed();
+    };
+
+    window.toggleFav = function(titleId) {
+      householdData.favorites[titleId] = !householdData.favorites[titleId];
+      if (!householdData.favorites[titleId]) delete householdData.favorites[titleId];
+      pushHouseholdSync();
+      renderNavTabs();
+      renderFeed();
+    };
+
+    window.toggleGood = function(titleId) {
+      householdData.good[titleId] = !householdData.good[titleId];
+      if (!householdData.good[titleId]) delete householdData.good[titleId];
+      pushHouseholdSync();
+      renderNavTabs();
+      renderFeed();
+    };
+
+    // --- 5. Navigation & Tabs ---
+    function renderNavTabs() {
+      const container = document.getElementById('listNav');
+      const cats = householdData.categories || DEFAULT_CATEGORIES;
+
+      const counts = { all: catalog.length + householdData.userTitles.length, uncategorized: 0, favorites: 0, good: 0 };
+      cats.forEach(c => counts[c.key] = 0);
+
+      const all = [...catalog, ...householdData.userTitles];
+      all.forEach(item => {
+        const assigned = householdData.lists[item.id] || 'uncategorized';
+        counts[assigned] = (counts[assigned] || 0) + 1;
+        if (householdData.favorites[item.id]) counts.favorites++;
+        if (householdData.good[item.id]) counts.good++;
+      });
+
+      let html = `
+        <button class="nav-tab ${currentFilter === 'all' ? 'active' : ''}" data-list="all">📚 All Titles (${counts.all})</button>
+        <button class="nav-tab ${currentFilter === 'uncategorized' ? 'active' : ''}" data-list="uncategorized">📥 Inbox (${counts.uncategorized || 0})</button>
+        <button class="nav-tab special ${currentFilter === 'favorites' ? 'active' : ''}" data-list="favorites">❤️ Favs (${counts.favorites})</button>
+        <button class="nav-tab special ${currentFilter === 'good' ? 'active' : ''}" data-list="good">👍 Good (${counts.good})</button>
+      `;
+
+      cats.forEach(c => {
+        html += `<button class="nav-tab ${currentFilter === c.key ? 'active' : ''}" data-list="${c.key}">📁 ${c.label} (${counts[c.key] || 0})</button>`;
+      });
+
+      html += `<button class="nav-manage-btn" id="openManageCategoriesBtn">✏️ Edit</button>`;
+      container.innerHTML = html;
+
+      container.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.onclick = () => {
+          container.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          currentFilter = tab.getAttribute('data-list');
+          page = 1;
+          renderFeed();
+        };
+      });
+
+      document.getElementById('openManageCategoriesBtn').onclick = openCategoriesModal;
+    }
+
+    // --- 6. Genre Exclusion ---
     function updateExcludedBadge() {
       const count = (householdData.excludedGenres || []).length;
       document.getElementById('excludeCountBadge').textContent = count;
@@ -469,45 +682,7 @@
 
     document.getElementById('openGenreFilterBtn').onclick = openGenreModal;
 
-    // --- 4. Dynamic Category Management ---
-    function renderNavTabs() {
-      const container = document.getElementById('listNav');
-      const cats = householdData.categories || DEFAULT_CATEGORIES;
-
-      const counts = { all: catalog.length + householdData.userTitles.length, uncategorized: 0 };
-      cats.forEach(c => counts[c.key] = 0);
-
-      const all = [...catalog, ...householdData.userTitles];
-      all.forEach(item => {
-        const assigned = householdData.lists[item.id] || 'uncategorized';
-        counts[assigned] = (counts[assigned] || 0) + 1;
-      });
-
-      let html = `
-        <button class="nav-tab ${currentFilter === 'all' ? 'active' : ''}" data-list="all">All (${counts.all})</button>
-        <button class="nav-tab ${currentFilter === 'uncategorized' ? 'active' : ''}" data-list="uncategorized">Uncategorized (${counts.uncategorized || 0})</button>
-      `;
-
-      cats.forEach(c => {
-        html += `<button class="nav-tab ${currentFilter === c.key ? 'active' : ''}" data-list="${c.key}">${c.label} (${counts[c.key] || 0})</button>`;
-      });
-
-      html += `<button class="nav-manage-btn" id="openManageCategoriesBtn">✏️ Edit Lists</button>`;
-      container.innerHTML = html;
-
-      container.querySelectorAll('.nav-tab').forEach(tab => {
-        tab.onclick = () => {
-          container.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-          tab.classList.add('active');
-          currentFilter = tab.getAttribute('data-list');
-          page = 1;
-          renderFeed();
-        };
-      });
-
-      document.getElementById('openManageCategoriesBtn').onclick = openCategoriesModal;
-    }
-
+    // --- 7. Manage Folders & Categories ---
     function openCategoriesModal() {
       hideAllModals();
       const listContainer = document.getElementById('categoryManageList');
@@ -540,7 +715,7 @@
     window.deleteCategory = function(key) {
       const cat = householdData.categories.find(c => c.key === key);
       const name = cat ? cat.label : key;
-      if (!confirm(`Delete list "${name}"? Titles in this list will be safely moved to Uncategorized.`)) return;
+      if (!confirm(`Delete folder "${name}"? Titles in this folder will safely return to Inbox.`)) return;
 
       householdData.categories = householdData.categories.filter(c => c.key !== key);
       for (let id in householdData.lists) {
@@ -567,7 +742,40 @@
       openCategoriesModal();
     };
 
-    // --- 5. Feed Filtering & Sorting ---
+    // --- 8. Tonight's Pick & Share List ---
+    document.getElementById('pickRandomBtn').onclick = () => {
+      const eligible = getFilteredTitles();
+      if (eligible.length === 0) { alert("No titles in this view!"); return; }
+      showRoulette(eligible[Math.floor(Math.random() * eligible.length)]);
+    };
+
+    function showRoulette(item) {
+      hideAllModals();
+      const content = document.getElementById('rouletteContent');
+      content.innerHTML = `
+        <div style="font-weight:700; font-size:1.15rem; color:var(--green-dark);">${item.title} (${item.year})</div>
+        <div style="font-size:0.8rem; color:var(--muted); margin:4px 0;">${item.format} • ${(item.genres||[]).join(', ')}</div>
+        <img src="${item.cover_url||''}" style="width:120px; height:180px; object-fit:cover; border-radius:8px; margin:8px auto; display:block;" onerror="this.style.display='none'">
+        <p style="font-size:0.82rem; color:var(--text); text-align:left; margin-top:6px;">${item.summary||''}</p>
+      `;
+      document.getElementById('rouletteModal').classList.remove('hidden');
+    }
+
+    document.getElementById('rerollBtn').onclick = () => {
+      const eligible = getFilteredTitles();
+      if (eligible.length > 0) showRoulette(eligible[Math.floor(Math.random() * eligible.length)]);
+    };
+    document.getElementById('closeRouletteBtn').onclick = hideAllModals;
+
+    document.getElementById('shareListBtn').onclick = () => {
+      const eligible = getFilteredTitles();
+      if (eligible.length === 0) { alert("Current list is empty!"); return; }
+      const text = `🎬 *Our Watchlist (${currentFilter.toUpperCase()})*:\n` + eligible.slice(0, 30).map(i => `• ${i.title} (${i.year})`).join('\n') + (eligible.length > 30 ? `\n...and ${eligible.length - 30} more!` : '');
+      navigator.clipboard.writeText(text);
+      alert(`Copied ${eligible.length} titles to clipboard!`);
+    };
+
+    // --- 9. Feed Filtering & Sorting ---
     async function loadCatalog() {
       try {
         const res = await fetch('catalog.json');
@@ -589,8 +797,10 @@
       if (prev === listName) return;
       lastMove = { titleId, prevList: prev, newList: listName };
       document.getElementById('undoBtn').disabled = false;
+      
       if (listName === 'uncategorized') delete householdData.lists[titleId];
       else householdData.lists[titleId] = listName;
+      
       renderNavTabs();
       renderFeed();
       pushHouseholdSync();
@@ -612,8 +822,7 @@
       pushHouseholdSync();
     };
 
-    function renderFeed() {
-      const container = document.getElementById('catalogFeed');
+    function getFilteredTitles() {
       const search = document.getElementById('searchInput').value.toLowerCase();
       const format = document.getElementById('formatFilter').value;
       const sortBy = document.getElementById('sortFilter').value;
@@ -624,23 +833,35 @@
 
       let filtered = combined.filter(item => {
         const assigned = householdData.lists[item.id] || 'uncategorized';
-        if (currentFilter !== 'all' && assigned !== currentFilter) return false;
+        
+        // Tab Filters:
+        if (currentFilter === 'uncategorized' && assigned !== 'uncategorized') return false;
+        if (currentFilter === 'favorites' && !householdData.favorites[item.id]) return false;
+        if (currentFilter === 'good' && !householdData.good[item.id]) return false;
+        if (currentFilter !== 'all' && currentFilter !== 'uncategorized' && currentFilter !== 'favorites' && currentFilter !== 'good' && assigned !== currentFilter) return false;
+
+        // Permanent Hide Seen & Pass check
         if (hideDone && (assigned === 'seen' || assigned === 'no')) return false;
+        
         if (format && item.format !== format) return false;
 
-        // Strict Horror & Custom Excluded Genres check
+        // Strict Horror & Custom Exclusions
         const genres = item.genres || [];
-        if (genres.includes('Horror')) return false;
-        if (genres.some(g => excluded.has(g))) return false;
+        if (genres.includes('Horror') || genres.some(g => excluded.has(g))) return false;
 
+        // Collection Dropdown Filter
+        if (coll === 'favorites' && !householdData.favorites[item.id]) return false;
+        if (coll === 'good' && !householdData.good[item.id]) return false;
+        if (coll === 'high_rated' && (householdData.ratings[item.id] || 0) < 4) return false;
         if (coll === 'startHere' && !item.shortlist) return false;
         if (coll === 'family' && item.audience !== 'Family' && item.audience !== 'Little kids') return false;
         if (coll === 'parenting' && !item.parentingComedy) return false;
         if (coll === 'renovation' && !item.renovation) return false;
         if (coll === '2019-2026' && !(item.year >= 2019 && item.year <= 2026)) return false;
-        if (coll === 'userAdded' && !item.userAdded) return false;
+
+        // Search
         if (search) {
-          const matchTarget = `${item.title} ${item.cast || ''} ${item.summary || ''}`.toLowerCase();
+          const matchTarget = `${item.title} ${item.cast || ''} ${item.summary || ''} ${(item.matches||[]).join(' ')}`.toLowerCase();
           if (!matchTarget.includes(search)) return false;
         }
         return true;
@@ -648,6 +869,7 @@
 
       // Sorting
       filtered.sort((a, b) => {
+        if (sortBy === 'rating_desc') return (householdData.ratings[b.id] || 0) - (householdData.ratings[a.id] || 0);
         if (sortBy === 'newest') return (b.year || 0) - (a.year || 0);
         if (sortBy === 'oldest') return (a.year || 0) - (b.year || 0);
         if (sortBy === 'title_asc') return a.title.localeCompare(b.title);
@@ -655,7 +877,26 @@
         return 0;
       });
 
+      return filtered;
+    }
+
+    function renderFeed() {
+      const container = document.getElementById('catalogFeed');
+      const filtered = getFilteredTitles();
       const display = filtered.slice(0, page * pageSize);
+      
+      if (display.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center; padding:32px 16px; color:var(--muted);">
+            <div style="font-size:2rem; margin-bottom:8px;">🍿</div>
+            <strong>No titles found here!</strong><br>
+            Try selecting another folder above or adjust your search filters.
+          </div>
+        `;
+        document.getElementById('loadMoreContainer').style.display = 'none';
+        return;
+      }
+
       container.innerHTML = display.map(createCardHTML).join('');
       document.getElementById('loadMoreContainer').style.display = display.length < filtered.length ? 'block' : 'none';
     }
@@ -663,6 +904,9 @@
     function createCardHTML(item) {
       const assigned = householdData.lists[item.id] || 'uncategorized';
       const note = householdData.notes[item.id] || '';
+      const isFav = !!householdData.favorites[item.id];
+      const isGood = !!householdData.good[item.id];
+      const rating = householdData.ratings[item.id] || 0;
       const cats = householdData.categories || DEFAULT_CATEGORIES;
 
       let chipsHTML = cats.map(c => `
@@ -678,6 +922,16 @@
         seasonBadge = `<div class="badge badge-green" style="margin-top:4px;">Season ${ls.number} (${ls.premiere} to ${endStr})</div>`;
       }
 
+      let matchBadge = '';
+      if (item.matchedFavorite) {
+        matchBadge = `<div class="badge badge-match" style="margin-top:4px;">✨ ${item.matchedFavorite}</div>`;
+      }
+
+      // Star rating HTML
+      let starsHTML = [1,2,3,4,5].map(s => `
+        <button class="star-btn ${rating >= s ? 'filled' : ''}" onclick="setRating(${item.id}, ${s})" title="${s} Stars">★</button>
+      `).join('');
+
       return `
         <article class="card">
           <div class="cover-thumb-wrap" onclick="openModal(${item.id})">
@@ -685,13 +939,29 @@
           </div>
           <div class="card-body">
             <div>
-              <h2 class="card-title">${item.title}</h2>
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <h2 class="card-title">${item.title}</h2>
+              </div>
               <div class="card-meta">${item.year} • ${item.format} • ${item.platform || ''}</div>
+              
+              <!-- Quick Reactions & Star Rating Bar -->
+              <div class="reaction-bar">
+                <div class="stars-wrap">
+                  ${starsHTML}
+                  ${rating > 0 ? `<span style="font-size:0.75rem; font-weight:700; color:var(--gold); margin-left:2px;">${rating}★</span>` : ''}
+                </div>
+                <div class="react-pills">
+                  <button class="react-btn fav ${isFav ? 'active' : ''}" onclick="toggleFav(${item.id})">❤️ Fav</button>
+                  <button class="react-btn good ${isGood ? 'active' : ''}" onclick="toggleGood(${item.id})">👍 Good</button>
+                </div>
+              </div>
+
               <div class="badge-bar">
                 <span class="badge">${item.audience || 'General'}</span>
                 ${(item.genres || []).map(g => `<span class="badge">${g}</span>`).join('')}
               </div>
               ${seasonBadge}
+              ${matchBadge}
               <p class="card-summary">${item.summary || ''}</p>
             </div>
             <div>
@@ -728,7 +998,7 @@
     };
     document.getElementById('modalCloseBtn').onclick = () => document.getElementById('coverModal').classList.add('hidden');
 
-    // --- 6. TMDB Importer (Excludes Horror + Excluded Genres) ---
+    // --- 10. TMDB Suggestion & Pull Engine ---
     const GENRE_MAP = {
       28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy", 80: "Crime",
       99: "Documentary", 18: "Drama", 10751: "Family", 14: "Fantasy", 36: "History",
@@ -739,13 +1009,8 @@
     };
 
     const TMDB_GENRE_TO_ID = {
-      "War": [10752, 10768],
-      "Western": [37],
-      "Romance": [10749],
-      "Musical": [10402],
-      "Music": [10402],
-      "Sci-Fi": [878, 10765],
-      "Documentary": [99]
+      "War": [10752, 10768], "Western": [37], "Romance": [10749], "Musical": [10402],
+      "Music": [10402], "Sci-Fi": [878, 10765], "Documentary": [99]
     };
 
     function getTmdbKey() { return localStorage.getItem('ow_tmdb_key') || ''; }
@@ -757,78 +1022,79 @@
       alert("TMDB Key saved!");
     };
 
-    document.getElementById('fetchTmdbBatchBtn').onclick = async () => {
+    document.getElementById('importStrategySelect').onchange = (e) => {
+      if (e.target.value === 'smart') {
+        document.getElementById('smartStrategyControls').classList.remove('hidden');
+        document.getElementById('standardStrategyControls').classList.add('hidden');
+      } else {
+        document.getElementById('smartStrategyControls').classList.add('hidden');
+        document.getElementById('standardStrategyControls').classList.remove('hidden');
+      }
+    };
+
+    // --- 11. Fresh 20 Releases (Last 6 Months) Engine ---
+    document.getElementById('fetchFresh20Btn').onclick = async () => {
       const apiKey = getTmdbKey();
-      if (!apiKey) { alert("Please enter your free TMDB API Key above first!"); return; }
-      const startYear = parseInt(document.getElementById('importStartYear').value) || 2019;
-      const endYear = parseInt(document.getElementById('importEndYear').value) || 2026;
-      const fmt = document.getElementById('importFormat').value;
-      const lang = document.getElementById('importLang').value;
-      const statusBox = document.getElementById('importStatusBox');
+      if (!apiKey) {
+        alert("Please tap 'Import 100' at the bottom and save your free TMDB API Key first!");
+        return;
+      }
 
-      statusBox.innerHTML = "Querying TMDB (excluding Horror & custom exclusions)...";
-      pendingTmdbBatch = [];
+      const today = new Date();
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(today.getMonth() - 6);
 
-      // Exclude Horror (27) plus user-excluded genres
+      const endDate = today.toISOString().split('T')[0];
+      const startDate = sixMonthsAgo.toISOString().split('T')[0];
+
       let withoutGenreIds = [27];
       const excluded = householdData.excludedGenres || [];
-      excluded.forEach(g => {
-        if (TMDB_GENRE_TO_ID[g]) withoutGenreIds.push(...TMDB_GENRE_TO_ID[g]);
-      });
+      excluded.forEach(g => { if (TMDB_GENRE_TO_ID[g]) withoutGenreIds.push(...TMDB_GENRE_TO_ID[g]); });
       const withoutStr = withoutGenreIds.join(',');
 
-      const storageKey = `tmdb_page_${startYear}_${endYear}_${fmt}_${lang}_${withoutStr}`;
-      let currentPage = parseInt(localStorage.getItem(storageKey)) || 1;
-
-      const endpoints = [];
-      if (fmt === 'both' || fmt === 'movie') {
-        let url = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&without_genres=${withoutStr}&primary_release_date.gte=${startYear}-01-01&primary_release_date.lte=${endYear}-12-31&sort_by=popularity.desc&page=${currentPage}`;
-        if (lang) url += `&with_original_language=${lang.slice(0,2)}`;
-        endpoints.push({ type: 'Movie', url });
-      }
-      if (fmt === 'both' || fmt === 'tv') {
-        let url = `https://api.themoviedb.org/3/discover/tv?api_key=${apiKey}&without_genres=${withoutStr}&first_air_date.gte=${startYear}-01-01&first_air_date.lte=${endYear}-12-31&sort_by=popularity.desc&page=${currentPage}`;
-        if (lang) url += `&with_original_language=${lang.slice(0,2)}`;
-        endpoints.push({ type: 'TV', url });
-      }
+      const listContainer = document.getElementById('fresh20List');
+      listContainer.innerHTML = "Querying newest releases from the last 6 months...";
+      pendingFresh20 = [];
 
       try {
-        let rawResults = [];
+        const endpoints = [
+          { type: 'Movie', url: `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&without_genres=${withoutStr}&primary_release_date.gte=${startDate}&primary_release_date.lte=${endDate}&sort_by=popularity.desc&page=1` },
+          { type: 'TV', url: `https://api.themoviedb.org/3/discover/tv?api_key=${apiKey}&without_genres=${withoutStr}&first_air_date.gte=${startDate}&first_air_date.lte=${endDate}&sort_by=popularity.desc&page=1` }
+        ];
+
+        let results = [];
         for (let ep of endpoints) {
           const res = await fetch(ep.url);
           const data = await res.json();
-          if (data.results) rawResults.push(...data.results.map(r => ({ ...r, _format: ep.type })));
+          if (data.results) results.push(...data.results.map(r => ({ ...r, _format: ep.type })));
         }
 
         const existingTitles = new Set([...catalog, ...householdData.userTitles].map(t => `${t.title.toLowerCase()}_${t.year}`));
         const excludedSet = new Set(excluded);
-        let duplicatesCount = 0;
 
-        for (let item of rawResults) {
+        for (let item of results) {
           const gIds = item.genre_ids || [];
-          if (gIds.includes(27)) continue; // Horror check
-
+          if (gIds.includes(27)) continue;
           const genres = gIds.map(id => GENRE_MAP[id]).filter(Boolean);
-          if (genres.some(g => excludedSet.has(g))) continue; // Excluded check
+          if (genres.some(g => excludedSet.has(g))) continue;
 
           const title = item.title || item.name;
           const releaseDate = item.release_date || item.first_air_date || '';
-          const year = parseInt(releaseDate.slice(0, 4)) || startYear;
+          const itemYear = parseInt(releaseDate.slice(0, 4)) || today.getFullYear();
 
-          if (existingTitles.has(`${title.toLowerCase()}_${year}`)) {
-            duplicatesCount++;
-            continue;
-          }
+          if (existingTitles.has(`${title.toLowerCase()}_${itemYear}`)) continue;
+          existingTitles.add(`${title.toLowerCase()}_${itemYear}`);
 
           const cover = item.poster_path ? `https://image.tmdb.org/t/p/w300_and_h450_face${item.poster_path}` : '';
+          
           let audience = 'Adults';
           if (genres.includes('Family') || genres.includes('Kids')) audience = 'Family';
           else if (item.vote_average >= 7.0 && !genres.includes('Crime')) audience = 'Teens+';
 
-          pendingTmdbBatch.push({
-            id: 2000 + (catalog.length + householdData.userTitles.length + pendingTmdbBatch.length),
+          pendingFresh20.push({
+            id: 5000 + (catalog.length + householdData.userTitles.length + pendingFresh20.length),
             title: title,
-            year: year,
+            year: itemYear,
             format: item._format,
             platform: 'Theatrical / Streaming',
             audience: audience,
@@ -836,21 +1102,242 @@
             summary: item.overview || '',
             cover_url: cover,
             trailerStatus: 'not_verified',
+            matchedFavorite: `Fresh Release (${releaseDate || 'Recent'})`,
             userAdded: true
           });
 
-          if (pendingTmdbBatch.length >= 100) break;
+          if (pendingFresh20.length >= 20) break;
         }
 
-        localStorage.setItem(storageKey, currentPage + 1);
-
-        statusBox.innerHTML = `
-          <strong>Found ${pendingTmdbBatch.length} new titles</strong> (${duplicatesCount} duplicates skipped).<br>
-          <div style="margin-top:6px; font-size:0.75rem; color:var(--muted);">
-            Sample: ${pendingTmdbBatch.slice(0, 4).map(t => `${t.title} (${t.year})`).join(', ')}...
+        listContainer.innerHTML = pendingFresh20.map((t, idx) => `
+          <div style="display:flex; justify-content:space-between; align-items:center; background:#F2EFE9; padding:6px; border-radius:6px;">
+            <span><strong>${idx+1}. ${t.title}</strong> (${t.year}) [${t.format}]</span>
           </div>
-        `;
-        document.getElementById('commitTmdbBatchBtn').classList.remove('hidden');
+        `).join('');
+
+        document.getElementById('fresh20Modal').classList.remove('hidden');
+      } catch (err) {
+        alert("Failed to pull fresh releases: " + err.message);
+      }
+    };
+
+    document.getElementById('commitFresh20Btn').onclick = () => {
+      if (pendingFresh20.length === 0) return;
+      householdData.userTitles.push(...pendingFresh20);
+      pushHouseholdSync();
+      renderNavTabs();
+      renderFeed();
+      alert(`Added ${pendingFresh20.length} fresh releases to your catalog!`);
+      pendingFresh20 = [];
+      hideAllModals();
+    };
+
+    document.getElementById('closeFresh20Btn').onclick = hideAllModals;
+
+    // --- 12. Smart & Standard 100-Title Importer ---
+    document.getElementById('fetchTmdbBatchBtn').onclick = async () => {
+      const apiKey = getTmdbKey();
+      if (!apiKey) { alert("Please enter and save your TMDB API Key above first!"); return; }
+      
+      const strategy = document.getElementById('importStrategySelect').value;
+      const fmt = document.getElementById('importFormat').value;
+      const lang = document.getElementById('importLang').value;
+      const statusBox = document.getElementById('importStatusBox');
+
+      statusBox.innerHTML = `<strong>Analyzing & pulling 100 titles...</strong>`;
+      pendingTmdbBatch = [];
+
+      let withoutGenreIds = [27]; // Horror
+      const excluded = householdData.excludedGenres || [];
+      excluded.forEach(g => { if (TMDB_GENRE_TO_ID[g]) withoutGenreIds.push(...TMDB_GENRE_TO_ID[g]); });
+      const withoutStr = withoutGenreIds.join(',');
+
+      const existingTitles = new Set([...catalog, ...householdData.userTitles].map(t => `${t.title.toLowerCase()}_${t.year}`));
+      const excludedSet = new Set(excluded);
+      let duplicatesCount = 0;
+
+      try {
+        if (strategy === 'smart') {
+          const anchor = document.getElementById('smartAnchorSelect').value;
+          const allItems = [...catalog, ...householdData.userTitles];
+          
+          let seedItems = allItems.filter(i => {
+            const r = householdData.ratings[i.id] || 0;
+            if (anchor === 'stars_only') return r >= 4;
+            if (anchor === 'fav_only') return householdData.favorites[i.id];
+            if (anchor === 'good_only') return householdData.good[i.id];
+            return householdData.favorites[i.id] || householdData.good[i.id] || r >= 4;
+          });
+
+          if (seedItems.length === 0) seedItems = allItems.filter(i => i.shortlist).slice(0, 5);
+
+          const genreCounts = {};
+          seedItems.forEach(i => {
+            (i.genres || []).forEach(g => { genreCounts[g] = (genreCounts[g] || 0) + 1; });
+          });
+
+          const sortedGenres = Object.keys(genreCounts).sort((a,b) => genreCounts[b] - genreCounts[a]);
+          const topFavNames = seedItems.slice(0, 3).map(i => i.title).join(', ');
+          const topGenreName = sortedGenres[0] || "Comedy";
+          
+          let withGenreId = "";
+          for (let id in GENRE_MAP) {
+            if (GENRE_MAP[id].toLowerCase() === topGenreName.toLowerCase()) { withGenreId = id; break; }
+          }
+
+          const smartStorageKey = `tmdb_smart_${anchor}_${fmt}_${lang}_${withGenreId}`;
+          let pageNum = parseInt(localStorage.getItem(smartStorageKey)) || 1;
+          let loops = 0;
+
+          while (pendingTmdbBatch.length < 100 && loops < 12) {
+            loops++;
+            const endpoints = [];
+            if (fmt === 'both' || fmt === 'movie') {
+              let url = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&without_genres=${withoutStr}&sort_by=vote_count.desc&page=${pageNum}`;
+              if (withGenreId) url += `&with_genres=${withGenreId}`;
+              if (lang) url += `&with_original_language=${lang.slice(0,2)}`;
+              endpoints.push({ type: 'Movie', url });
+            }
+            if (fmt === 'both' || fmt === 'tv') {
+              let url = `https://api.themoviedb.org/3/discover/tv?api_key=${apiKey}&without_genres=${withoutStr}&sort_by=vote_count.desc&page=${pageNum}`;
+              if (withGenreId) url += `&with_genres=${withGenreId}`;
+              if (lang) url += `&with_original_language=${lang.slice(0,2)}`;
+              endpoints.push({ type: 'TV', url });
+            }
+
+            let results = [];
+            for (let ep of endpoints) {
+              const res = await fetch(ep.url);
+              const data = await res.json();
+              if (data.results && data.results.length) results.push(...data.results.map(r => ({ ...r, _format: ep.type })));
+            }
+            if (results.length === 0) break;
+
+            for (let item of results) {
+              const gIds = item.genre_ids || [];
+              if (gIds.includes(27)) continue;
+              const genres = gIds.map(id => GENRE_MAP[id]).filter(Boolean);
+              if (genres.some(g => excludedSet.has(g))) continue;
+
+              const title = item.title || item.name;
+              const releaseDate = item.release_date || item.first_air_date || '';
+              const itemYear = parseInt(releaseDate.slice(0, 4)) || 2021;
+
+              if (existingTitles.has(`${title.toLowerCase()}_${itemYear}`)) { duplicatesCount++; continue; }
+              existingTitles.add(`${title.toLowerCase()}_${itemYear}`);
+              
+              const cover = item.poster_path ? `https://image.tmdb.org/t/p/w300_and_h450_face${item.poster_path}` : '';
+              let audience = 'Adults';
+              if (genres.includes('Family') || genres.includes('Kids')) audience = 'Family';
+              else if (item.vote_average >= 7.0 && !genres.includes('Crime')) audience = 'Teens+';
+
+              pendingTmdbBatch.push({
+                id: 4000 + (catalog.length + householdData.userTitles.length + pendingTmdbBatch.length),
+                title: title,
+                year: itemYear,
+                format: item._format,
+                platform: 'Theatrical / Streaming',
+                audience: audience,
+                genres: genres,
+                summary: item.overview || '',
+                cover_url: cover,
+                trailerStatus: 'not_verified',
+                matchedFavorite: `Like: ${topFavNames || topGenreName}`,
+                userAdded: true
+              });
+              if (pendingTmdbBatch.length >= 100) break;
+            }
+            pageNum++;
+          }
+          localStorage.setItem(smartStorageKey, pageNum);
+
+          statusBox.innerHTML = `
+            <strong>Found ${pendingTmdbBatch.length} suggested titles!</strong><br>
+            ✨ Inspired by your ratings & favorites: <em>${topFavNames || topGenreName}</em>.<br>
+            <div style="margin-top:6px; font-size:0.75rem; color:var(--muted);">
+              Sample: ${pendingTmdbBatch.slice(0, 4).map(t => `${t.title} (${t.year})`).join(', ')}...
+            </div>
+          `;
+        } else {
+          // Standard by Year & Category
+          const year = parseInt(document.getElementById('importYear').value) || 2021;
+          const genreId = document.getElementById('importGenreSelect').value;
+          const storageKey = `tmdb_page_${year}_${genreId}_${fmt}_${lang}`;
+          let pageNum = parseInt(localStorage.getItem(storageKey)) || 1;
+          let loops = 0;
+
+          while (pendingTmdbBatch.length < 100 && loops < 12) {
+            loops++;
+            const endpoints = [];
+            if (fmt === 'both' || fmt === 'movie') {
+              let url = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&without_genres=${withoutStr}&primary_release_year=${year}&sort_by=popularity.desc&page=${pageNum}`;
+              if (genreId) url += `&with_genres=${genreId}`;
+              if (lang) url += `&with_original_language=${lang.slice(0,2)}`;
+              endpoints.push({ type: 'Movie', url });
+            }
+            if (fmt === 'both' || fmt === 'tv') {
+              let url = `https://api.themoviedb.org/3/discover/tv?api_key=${apiKey}&without_genres=${withoutStr}&first_air_date_year=${year}&sort_by=popularity.desc&page=${pageNum}`;
+              if (genreId) url += `&with_genres=${genreId}`;
+              if (lang) url += `&with_original_language=${lang.slice(0,2)}`;
+              endpoints.push({ type: 'TV', url });
+            }
+
+            let results = [];
+            for (let ep of endpoints) {
+              const res = await fetch(ep.url);
+              const data = await res.json();
+              if (data.results && data.results.length) results.push(...data.results.map(r => ({ ...r, _format: ep.type })));
+            }
+            if (results.length === 0) break;
+
+            for (let item of results) {
+              const gIds = item.genre_ids || [];
+              if (gIds.includes(27)) continue;
+              const genres = gIds.map(id => GENRE_MAP[id]).filter(Boolean);
+              if (genres.some(g => excludedSet.has(g))) continue;
+
+              const title = item.title || item.name;
+              const releaseDate = item.release_date || item.first_air_date || '';
+              const itemYear = parseInt(releaseDate.slice(0, 4)) || year;
+
+              if (existingTitles.has(`${title.toLowerCase()}_${itemYear}`)) { duplicatesCount++; continue; }
+              existingTitles.add(`${title.toLowerCase()}_${itemYear}`);
+              
+              const cover = item.poster_path ? `https://image.tmdb.org/t/p/w300_and_h450_face${item.poster_path}` : '';
+              let audience = 'Adults';
+              if (genres.includes('Family') || genres.includes('Kids')) audience = 'Family';
+              else if (item.vote_average >= 7.0 && !genres.includes('Crime')) audience = 'Teens+';
+
+              pendingTmdbBatch.push({
+                id: 3000 + (catalog.length + householdData.userTitles.length + pendingTmdbBatch.length),
+                title: title,
+                year: itemYear,
+                format: item._format,
+                platform: 'Theatrical / Streaming',
+                audience: audience,
+                genres: genres,
+                summary: item.overview || '',
+                cover_url: cover,
+                trailerStatus: 'not_verified',
+                userAdded: true
+              });
+              if (pendingTmdbBatch.length >= 100) break;
+            }
+            pageNum++;
+          }
+          localStorage.setItem(storageKey, pageNum);
+
+          statusBox.innerHTML = `
+            <strong>Found ${pendingTmdbBatch.length} new titles</strong> for ${year} (${duplicatesCount} duplicates skipped).<br>
+            <div style="margin-top:6px; font-size:0.75rem; color:var(--muted);">
+              Sample: ${pendingTmdbBatch.slice(0, 4).map(t => `${t.title} (${t.year})`).join(', ')}...
+            </div>
+          `;
+        }
+
+        if (pendingTmdbBatch.length > 0) {
+          document.getElementById('commitTmdbBatchBtn').classList.remove('hidden');
+        }
       } catch (err) {
         statusBox.innerHTML = `<span style="color:#c00;">Failed: ${err.message}</span>`;
       }
@@ -862,13 +1349,13 @@
       pushHouseholdSync();
       renderNavTabs();
       renderFeed();
-      alert(`Successfully added ${pendingTmdbBatch.length} new titles to your catalog!`);
+      alert(`Added ${pendingTmdbBatch.length} new titles to your catalog!`);
       pendingTmdbBatch = [];
       document.getElementById('commitTmdbBatchBtn').classList.add('hidden');
       hideAllModals();
     };
 
-    // --- 7. Dock Navigation ---
+    // --- 13. Dock Navigation ---
     document.getElementById('dockDiscover').onclick = () => hideAllModals();
     document.getElementById('dockImport').onclick = () => {
       hideAllModals();
@@ -880,7 +1367,7 @@
     document.getElementById('dockSettings').onclick = () => { hideAllModals(); document.getElementById('settingsModal').classList.remove('hidden'); };
 
     function hideAllModals() {
-      ['coverModal', 'genreModal', 'importModal', 'categoriesModal', 'householdModal', 'settingsModal'].forEach(id => {
+      ['fresh20Modal', 'coverModal', 'rouletteModal', 'genreModal', 'importModal', 'categoriesModal', 'householdModal', 'settingsModal'].forEach(id => {
         document.getElementById(id).classList.add('hidden');
       });
     }
@@ -893,7 +1380,6 @@
     document.getElementById('formatFilter').onchange = () => { page = 1; renderFeed(); };
     document.getElementById('sortFilter').onchange = () => { page = 1; renderFeed(); };
     document.getElementById('collectionFilter').onchange = () => { page = 1; renderFeed(); };
-    document.getElementById('hideCompleted').onchange = () => { page = 1; renderFeed(); };
     document.getElementById('loadMoreBtn').onclick = () => { page++; renderFeed(); };
 
     document.getElementById('saveConfigBtn').onclick = () => {
