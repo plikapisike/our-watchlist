@@ -62,8 +62,6 @@
     .card-title { font-size: 0.98rem; font-weight: 700; color: var(--green-dark); line-height: 1.2; }
     .card-meta { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
     .card-cast { font-size: 0.75rem; color: var(--muted); margin: 3px 0 2px 0; line-height: 1.3; }
-    
-    /* Full readable summary on mobile (no 3-line clamp) */
     .card-summary { font-size: 0.8rem; color: var(--text); margin: 6px 0; line-height: 1.4; }
 
     .badge-bar { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0; }
@@ -231,26 +229,37 @@
         { key: 'again', label: 'See again' },
         { key: 'maybe', label: 'Not sure' },
         { key: 'no', label: 'Pass' }
-      ],
-      excludedGenres: ["Horror", "War", "Western"]
+      ]
     };
 
     let activeHousehold = localStorage.getItem('ow_household_user') || '';
-    let currentFilter = 'uncategorized';
+    // Remember active tab or default to 'all' so movies don't look missing!
+    let currentFilter = localStorage.getItem('ow_active_tab') || 'all';
     let pageSize = 25;
     let page = 1;
     let db = null;
+
+    // Helper: Build stable title key that NEVER changes even if ID changes
+    function getItemKey(item) {
+      if (!item) return '';
+      return `${(item.title || '').trim().toLowerCase()}_${item.year}`;
+    }
 
     // --- 1. LOAD LOCAL DATA IMMEDIATELY ---
     const savedLocal = localStorage.getItem('ow_local_data');
     if (savedLocal) {
       try {
         const parsed = JSON.parse(savedLocal);
-        Object.assign(householdData, parsed);
+        if (parsed.lists) Object.assign(householdData.lists, parsed.lists);
+        if (parsed.notes) Object.assign(householdData.notes, parsed.notes);
+        if (parsed.favorites) Object.assign(householdData.favorites, parsed.favorites);
+        if (parsed.good) Object.assign(householdData.good, parsed.good);
+        if (parsed.ratings) Object.assign(householdData.ratings, parsed.ratings);
+        if (parsed.categories) householdData.categories = parsed.categories;
       } catch(e) {}
     }
 
-    // --- 2. FIREBASE REALTIME SYNC ---
+    // --- 2. FIREBASE REALTIME SYNC (ANTI-WIPE PROTECTED) ---
     function initFirebase() {
       const cfg = localStorage.getItem('ow_firebase_config');
       if (!cfg || !window.FB) return;
@@ -271,35 +280,44 @@
       const hhDocRef = window.FB.doc(db, "households", username);
       window.FB.onSnapshot(hhDocRef, (snap) => {
         if (snap.exists()) {
-          const data = snap.data();
-          if (data.lists) householdData.lists = data.lists;
-          if (data.notes) householdData.notes = data.notes;
-          if (data.favorites) householdData.favorites = data.favorites;
-          if (data.good) householdData.good = data.good;
-          if (data.ratings) householdData.ratings = data.ratings;
-          if (data.categories) householdData.categories = data.categories;
-          localStorage.setItem('ow_local_data', JSON.stringify(householdData));
-          renderNavTabs();
-          renderFeed();
+          const cloud = snap.data();
+          const cloudListsCount = Object.keys(cloud.lists || {}).length;
+          const localListsCount = Object.keys(householdData.lists || {}).length;
+
+          // SAFE MERGE: Never allow an empty cloud document to wipe populated local data!
+          if (cloudListsCount > 0) {
+            householdData.lists = { ...householdData.lists, ...cloud.lists };
+            householdData.notes = { ...householdData.notes, ...(cloud.notes || {}) };
+            householdData.favorites = { ...householdData.favorites, ...(cloud.favorites || {}) };
+            householdData.good = { ...householdData.good, ...(cloud.good || {}) };
+            householdData.ratings = { ...householdData.ratings, ...(cloud.ratings || {}) };
+            if (cloud.categories) householdData.categories = cloud.categories;
+            localStorage.setItem('ow_local_data', JSON.stringify(householdData));
+            renderNavTabs();
+            renderFeed();
+          } else if (localListsCount > 0) {
+            // Local has saved choices but cloud is blank -> push local data up to cloud!
+            syncHouseholdChange();
+          }
         }
       });
     }
 
     async function syncHouseholdChange() {
+      // 1. Save to local storage synchronously first
       localStorage.setItem('ow_local_data', JSON.stringify(householdData));
+      document.getElementById('syncText').textContent = 'Saved';
+      document.getElementById('syncDot').classList.remove('error');
 
-      if (!db || !activeHousehold) {
-        document.getElementById('syncText').textContent = 'Saved';
-        document.getElementById('syncDot').classList.remove('error');
-        return;
-      }
-      try {
-        const hhDocRef = window.FB.doc(db, "households", activeHousehold);
-        await window.FB.setDoc(hhDocRef, householdData, { merge: true });
-        document.getElementById('syncText').textContent = 'Synced';
-        document.getElementById('syncDot').classList.remove('error');
-      } catch(e) {
-        document.getElementById('syncText').textContent = 'Saved locally';
+      // 2. Sync to Firestore if connected
+      if (db && activeHousehold) {
+        try {
+          const hhDocRef = window.FB.doc(db, "households", activeHousehold);
+          await window.FB.setDoc(hhDocRef, householdData, { merge: true });
+          document.getElementById('syncText').textContent = 'Synced';
+        } catch(e) {
+          document.getElementById('syncText').textContent = 'Saved Locally';
+        }
       }
     }
 
@@ -323,7 +341,7 @@
       const seenIds = new Set();
       catalog = catalog.filter(item => {
         if (!item || !item.title) return false;
-        const titleKey = `${item.title.trim().toLowerCase()}_${item.year}`;
+        const titleKey = getItemKey(item);
         if (seenKeys.has(titleKey) || seenIds.has(item.id)) return false;
         seenKeys.add(titleKey);
         seenIds.add(item.id);
@@ -335,6 +353,12 @@
       renderFeed();
     }
 
+    // Get assigned list using BOTH titleKey and ID so catalog re-ordering never loses data
+    function getAssignedList(item) {
+      const key = getItemKey(item);
+      return householdData.lists[key] || householdData.lists[item.id] || 'uncategorized';
+    }
+
     // --- 4. NAVIGATION TABS ---
     function renderNavTabs() {
       const container = document.getElementById('navTabsContainer');
@@ -342,15 +366,16 @@
       householdData.categories.forEach(c => counts[c.key] = 0);
 
       catalog.forEach(item => {
-        const assigned = householdData.lists[item.id] || 'uncategorized';
+        const assigned = getAssignedList(item);
+        const key = getItemKey(item);
         counts[assigned] = (counts[assigned] || 0) + 1;
-        if (householdData.favorites[item.id]) counts.favorites++;
-        if (householdData.good[item.id]) counts.good++;
+        if (householdData.favorites[key] || householdData.favorites[item.id]) counts.favorites++;
+        if (householdData.good[key] || householdData.good[item.id]) counts.good++;
       });
 
       let tabsHtml = `
-        <button class="nav-tab ${currentFilter==='uncategorized'?'active':''}" data-list="uncategorized">📥 Inbox (${counts.uncategorized})</button>
         <button class="nav-tab ${currentFilter==='all'?'active':''}" data-list="all">📚 All Titles (${counts.all})</button>
+        <button class="nav-tab ${currentFilter==='uncategorized'?'active':''}" data-list="uncategorized">📥 Inbox (${counts.uncategorized})</button>
         <button class="nav-tab ${currentFilter==='favorites'?'active':''}" data-list="favorites">❤️ Favorites (${counts.favorites})</button>
         <button class="nav-tab ${currentFilter==='good'?'active':''}" data-list="good">👍 Good (${counts.good})</button>
       `;
@@ -366,13 +391,13 @@
           container.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
           tab.classList.add('active');
           currentFilter = tab.getAttribute('data-list');
+          localStorage.setItem('ow_active_tab', currentFilter); // Remember tab across reloads!
           page = 1;
           renderFeed();
         };
       });
     }
 
-    // Format 2-4 cast names cleanly
     function formatCast(cast) {
       if (!cast) return '';
       if (Array.isArray(cast)) return cast.slice(0, 4).join(', ');
@@ -388,23 +413,24 @@
       const sort = document.getElementById('sortBy').value;
 
       let filtered = catalog.filter(item => {
-        const assigned = householdData.lists[item.id] || 'uncategorized';
+        const assigned = getAssignedList(item);
+        const key = getItemKey(item);
 
         if (currentFilter === 'uncategorized') {
           if (assigned !== 'uncategorized') return false;
         } else if (currentFilter === 'favorites') {
-          if (!householdData.favorites[item.id]) return false;
+          if (!householdData.favorites[key] && !householdData.favorites[item.id]) return false;
         } else if (currentFilter === 'good') {
-          if (!householdData.good[item.id]) return false;
+          if (!householdData.good[key] && !householdData.good[item.id]) return false;
         } else if (currentFilter !== 'all') {
           if (assigned !== currentFilter) return false;
         }
 
         if (format && item.format !== format) return false;
 
-        if (coll === 'favorites' && !householdData.favorites[item.id]) return false;
-        if (coll === 'good' && !householdData.good[item.id]) return false;
-        if (coll === 'high_rated' && (householdData.ratings[item.id] || 0) < 4) return false;
+        if (coll === 'favorites' && !householdData.favorites[key] && !householdData.favorites[item.id]) return false;
+        if (coll === 'good' && !householdData.good[key] && !householdData.good[item.id]) return false;
+        if (coll === 'high_rated' && (householdData.ratings[key] || householdData.ratings[item.id] || 0) < 4) return false;
         if (coll === 'startHere' && !item.shortlist) return false;
         if (coll === 'family' && item.audience !== 'Family') return false;
         if (coll === 'parenting' && !item.parentingComedy) return false;
@@ -421,7 +447,13 @@
       if (sort === 'year_desc') filtered.sort((a,b) => b.year - a.year);
       else if (sort === 'year_asc') filtered.sort((a,b) => a.year - b.year);
       else if (sort === 'title_asc') filtered.sort((a,b) => a.title.localeCompare(b.title));
-      else if (sort === 'rating_desc') filtered.sort((a,b) => (householdData.ratings[b.id]||0) - (householdData.ratings[a.id]||0));
+      else if (sort === 'rating_desc') {
+        filtered.sort((a,b) => {
+          const rA = householdData.ratings[getItemKey(a)] || householdData.ratings[a.id] || 0;
+          const rB = householdData.ratings[getItemKey(b)] || householdData.ratings[b.id] || 0;
+          return rB - rA;
+        });
+      }
 
       const displayItems = filtered.slice(0, page * pageSize);
       container.innerHTML = displayItems.map(item => createCardHTML(item)).join('');
@@ -429,11 +461,12 @@
     }
 
     function createCardHTML(item) {
-      const assigned = householdData.lists[item.id] || 'uncategorized';
-      const isFav = !!householdData.favorites[item.id];
-      const isGood = !!householdData.good[item.id];
-      const rating = householdData.ratings[item.id] || 0;
-      const note = householdData.notes[item.id] || '';
+      const assigned = getAssignedList(item);
+      const key = getItemKey(item);
+      const isFav = !!(householdData.favorites[key] || householdData.favorites[item.id]);
+      const isGood = !!(householdData.good[key] || householdData.good[item.id]);
+      const rating = householdData.ratings[key] || householdData.ratings[item.id] || 0;
+      const note = householdData.notes[key] || householdData.notes[item.id] || '';
       const castText = formatCast(item.cast);
 
       const chips = householdData.categories.map(c => `
@@ -455,7 +488,6 @@
               <h2 class="card-title">${item.title}</h2>
               <div class="card-meta">${item.year} • ${item.format} • ${item.platform || ''}</div>
               
-              <!-- 2 to 4 Cast / Host names -->
               ${castText ? `<div class="card-cast">👥 <strong>Cast:</strong> ${castText}</div>` : ''}
 
               <div class="badge-bar">
@@ -463,7 +495,6 @@
                 ${(item.genres||[]).map(g => `<span class="badge">${g}</span>`).join('')}
               </div>
 
-              <!-- Full readable plot summary -->
               <p class="card-summary">${item.summary||''}</p>
             </div>
 
@@ -487,38 +518,66 @@
       `;
     }
 
-    // --- 6. ACTIONS ---
-    window.setList = function(id, key) {
-      if (key === 'uncategorized') delete householdData.lists[id];
-      else householdData.lists[id] = key;
+    // --- 6. ACTIONS (TITLE-LOCKED) ---
+    window.setList = function(id, listKey) {
+      const item = catalog.find(x => x.id === id);
+      const titleKey = getItemKey(item);
+
+      if (listKey === 'uncategorized') {
+        delete householdData.lists[id];
+        if (titleKey) delete householdData.lists[titleKey];
+      } else {
+        householdData.lists[id] = listKey;
+        if (titleKey) householdData.lists[titleKey] = listKey; // Lock to Title+Year
+      }
+
       syncHouseholdChange();
       renderNavTabs();
       renderFeed();
     };
 
     window.toggleFavorite = function(id) {
-      householdData.favorites[id] = !householdData.favorites[id];
+      const item = catalog.find(x => x.id === id);
+      const titleKey = getItemKey(item);
+      const current = !!(householdData.favorites[titleKey] || householdData.favorites[id]);
+      householdData.favorites[id] = !current;
+      if (titleKey) householdData.favorites[titleKey] = !current;
+
       syncHouseholdChange();
       renderNavTabs();
       renderFeed();
     };
 
     window.toggleGood = function(id) {
-      householdData.good[id] = !householdData.good[id];
+      const item = catalog.find(x => x.id === id);
+      const titleKey = getItemKey(item);
+      const current = !!(householdData.good[titleKey] || householdData.good[id]);
+      householdData.good[id] = !current;
+      if (titleKey) householdData.good[titleKey] = !current;
+
       syncHouseholdChange();
       renderNavTabs();
       renderFeed();
     };
 
     window.setRating = function(id, val) {
+      const item = catalog.find(x => x.id === id);
+      const titleKey = getItemKey(item);
       householdData.ratings[id] = val;
+      if (titleKey) householdData.ratings[titleKey] = val;
+
       syncHouseholdChange();
       renderNavTabs();
       renderFeed();
     };
 
     window.saveNote = function(id, text) {
-      householdData.notes[id] = text.trim();
+      const item = catalog.find(x => x.id === id);
+      const titleKey = getItemKey(item);
+      const val = text.trim();
+      householdData.notes[id] = val;
+      if (titleKey) householdData.notes[titleKey] = val;
+
       syncHouseholdChange();
     };
 
