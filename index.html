@@ -58,7 +58,7 @@
     .btn-fresh { background: #D97706; color: #fff; }
     .btn-danger { background: #E63946; color: #fff; }
     
-    .toolbar-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--muted); padding-top: 4px; }
+    .toolbar-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--muted); padding-top: 4px; min-height: 28px; }
 
     .catalog-grid { display: flex; flex-direction: column; gap: 14px; padding: 4px 16px; }
     .card { background: var(--card-bg); border-radius: var(--radius); border: 1px solid var(--border); padding: 12px; display: flex; gap: 12px; box-shadow: var(--shadow); position: relative; }
@@ -115,13 +115,13 @@
     </div>
   </header>
 
-  <!-- Folder & Filter Tabs -->
+  <!-- Folder Navigation -->
   <div class="nav-scroll" id="listNav"></div>
 
   <section class="search-box">
     <div style="display:flex; gap:6px;">
       <input type="search" id="searchInput" placeholder="Search title, cast, plot..." style="flex:1;">
-      <button class="btn btn-fresh" id="fetchFresh20Btn" title="Pull 20 new movies/shows released in the last 6 months">
+      <button class="btn btn-fresh" id="fetchFresh20Btn" title="Pull 20 new releases from the last 6 months">
         🔥 Fresh 20
       </button>
     </div>
@@ -156,19 +156,21 @@
       <button class="btn btn-outline" id="openGenreFilterBtn" style="padding:4px 8px; font-size:0.75rem;">
         🚫 Exclude (<span id="excludeCountBadge">2</span>)
       </button>
-      <button class="btn btn-outline" id="pickRandomBtn" style="padding:4px 8px; font-size:0.75rem;" title="Pick a random title for tonight!">
+      <button class="btn btn-outline" id="pickRandomBtn" style="padding:4px 8px; font-size:0.75rem;">
         🎲 Pick
       </button>
-      <button class="btn btn-outline" id="shareListBtn" style="padding:4px 8px; font-size:0.75rem;" title="Copy list to clipboard">
+      <button class="btn btn-outline" id="shareListBtn" style="padding:4px 8px; font-size:0.75rem;">
         📤 Share
       </button>
     </div>
 
     <div class="toolbar-row">
-      <label style="cursor:pointer; display:flex; align-items:center; gap:6px;">
-        <input type="checkbox" id="hideCompleted"> 
-        <span>Hide Seen & Pass</span>
-      </label>
+      <div id="hideCompletedWrapper">
+        <label style="cursor:pointer; display:flex; align-items:center; gap:6px;">
+          <input type="checkbox" id="hideCompleted"> 
+          <span>Hide Seen & Pass</span>
+        </label>
+      </div>
       <button class="btn-outline btn" id="undoBtn" style="padding:3px 8px; font-size:0.75rem;" disabled>Undo Move</button>
     </div>
   </section>
@@ -189,13 +191,11 @@
     <button class="dock-btn" id="dockSettings"><span>⚙️</span>Settings</button>
   </nav>
 
-  <!-- Fresh 20 Releases Preview Modal -->
+  <!-- Fresh 20 Modal -->
   <div id="fresh20Modal" class="modal-backdrop hidden">
     <div class="modal-box">
       <h3 style="color:var(--green-dark);">🔥 Fresh 20 Releases</h3>
-      <p style="font-size:0.78rem; color:var(--muted);">
-        Popular non-Horror movies and series released in the past 6 months.
-      </p>
+      <p style="font-size:0.78rem; color:var(--muted);">Popular non-Horror releases from the past 6 months.</p>
       <div id="fresh20List" style="max-height:220px; overflow-y:auto; font-size:0.8rem; display:flex; flex-direction:column; gap:6px;"></div>
       <div style="display:flex; gap:8px; margin-top:8px;">
         <button class="btn btn-secondary" id="closeFresh20Btn" style="flex:1;">Cancel</button>
@@ -216,7 +216,7 @@
     </div>
   </div>
 
-  <!-- Tonight's Pick (Roulette) Modal -->
+  <!-- Roulette Modal -->
   <div id="rouletteModal" class="modal-backdrop hidden">
     <div class="modal-box" style="text-align:center;">
       <h3 style="color:var(--green-dark);">Tonight's Pick! 🎲</h3>
@@ -232,9 +232,7 @@
   <div id="genreModal" class="modal-backdrop hidden">
     <div class="modal-box">
       <h3 style="color:var(--green-dark);">Hide / Exclude Genres</h3>
-      <p style="font-size:0.78rem; color:var(--muted);">
-        Checked genres will be completely hidden from your feed and skipped during imports.
-      </p>
+      <p style="font-size:0.78rem; color:var(--muted);">Checked genres are hidden from your feed and skipped during imports.</p>
       <div class="genre-grid" id="genreCheckboxList"></div>
       <div style="display:flex; gap:8px; margin-top:8px;">
         <button class="btn btn-secondary" id="resetExcludedGenresBtn" style="flex:1;">Reset</button>
@@ -247,9 +245,7 @@
   <div id="categoriesModal" class="modal-backdrop hidden">
     <div class="modal-box">
       <h3 style="color:var(--green-dark);">Manage Folders & Lists</h3>
-      <p style="font-size:0.78rem; color:var(--muted);">
-        Rename, delete, or create folders. Deleting a folder safely moves its titles back to <strong>Inbox</strong>.
-      </p>
+      <p style="font-size:0.78rem; color:var(--muted);">Rename, delete, or create folders. Deleting moves titles back to Inbox.</p>
       <div id="categoryManageList" style="max-height: 220px; overflow-y: auto;"></div>
       <div style="background:#F2EFE9; padding:10px; border-radius:8px; margin-top:8px;">
         <label style="font-size:0.75rem; font-weight:600;">Create New Folder:</label>
@@ -266,7 +262,6 @@
   <div id="importModal" class="modal-backdrop hidden">
     <div class="modal-box">
       <h3 style="color:var(--green-dark);">Import 100 Titles</h3>
-      
       <div style="background:#F2EFE9; padding:8px; border-radius:8px;">
         <label style="font-size:0.75rem; font-weight:600;">TMDB API Key (v3):</label>
         <div style="display:flex; gap:6px; margin-top:4px;">
@@ -274,7 +269,6 @@
           <button class="btn" id="saveTmdbKeyBtn" style="padding:4px 10px; font-size:0.75rem;">Save</button>
         </div>
       </div>
-
       <div>
         <label style="font-size:0.75rem; font-weight:600; color:var(--green-dark);">Import Strategy:</label>
         <select id="importStrategySelect" style="margin-top:4px; font-weight:600;">
@@ -282,7 +276,6 @@
           <option value="standard">📅 By Specific Year & Category</option>
         </select>
       </div>
-
       <div id="smartStrategyControls" style="display:flex; flex-direction:column; gap:6px; background:#F8F4EC; padding:8px; border-radius:8px; border:1px solid var(--border);">
         <label style="font-size:0.72rem; color:var(--muted);">Inspiration Source:</label>
         <select id="smartAnchorSelect">
@@ -292,7 +285,6 @@
           <option value="good_only">Good Titles Only (👍)</option>
         </select>
       </div>
-
       <div id="standardStrategyControls" class="hidden" style="display:flex; flex-direction:column; gap:6px;">
         <div class="input-row">
           <div>
@@ -317,7 +309,6 @@
           </div>
         </div>
       </div>
-
       <div class="input-row">
         <select id="importFormat">
           <option value="both">Movies & TV Series</option>
@@ -329,16 +320,13 @@
           <option value="">Any Language</option>
         </select>
       </div>
-
       <div id="importStatusBox" style="font-size:0.8rem; background:#fff; border:1px solid var(--border); padding:10px; border-radius:8px; max-height:160px; overflow-y:auto;">
         Ready to pull 100 titles.
       </div>
-
       <div style="display:flex; gap:8px;">
         <button class="btn" id="fetchTmdbBatchBtn" style="flex:1;">Pull 100 Titles</button>
         <button class="btn btn-outline hidden" id="commitTmdbBatchBtn" style="flex:1;">Add to Catalog</button>
       </div>
-
       <button class="btn btn-secondary" id="closeImportModal">Close</button>
     </div>
   </div>
@@ -410,16 +398,16 @@
     };
     let activeHousehold = null;
     let lastMove = null;
-    let currentFilter = 'uncategorized'; // DEFAULT IS INBOX: Any categorized movie leaves the main screen!
+    let currentFilter = 'uncategorized'; // DEFAULT IS INBOX: Moving a title removes it instantly from Inbox!
     let pageSize = 25;
     let page = 1;
     let db = null;
     let pendingTmdbBatch = [];
     let pendingFresh20 = [];
 
-    // --- 1. Robust Local State Saver ---
+    // --- 1. Persistent Storage (Guarantees selections never disappear on refresh) ---
     function saveLocal() {
-      localStorage.setItem('ow_household_data', JSON.stringify({
+      localStorage.setItem('ow_watchlist_data', JSON.stringify({
         lists: householdData.lists,
         notes: householdData.notes,
         favorites: householdData.favorites,
@@ -432,7 +420,7 @@
     }
 
     function loadLocal() {
-      const saved = localStorage.getItem('ow_household_data');
+      const saved = localStorage.getItem('ow_watchlist_data');
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
@@ -442,7 +430,7 @@
     }
     loadLocal();
 
-    // --- 2. Cloud Initializer ---
+    // --- 2. Firebase Cloud Initializer ---
     function initFirebase() {
       const cfg = localStorage.getItem('ow_firebase_config');
       if (!cfg || !window.FB) return;
@@ -457,7 +445,7 @@
     }
     window.addEventListener('firebase-ready', initFirebase);
 
-    // --- 3. Shared Login & Sync ---
+    // --- 3. Shared Login with Safe Two-Way Cloud Merge ---
     async function connectHousehold(username, password, showPrompt = true) {
       username = username.toLowerCase().trim();
       if (!username || !password) {
@@ -511,14 +499,14 @@
         window.FB.onSnapshot(hhDocRef, (docSnap) => {
           if (docSnap.exists()) {
             const val = docSnap.data();
-            // Merge cloud data
-            Object.assign(householdData.lists, val.lists || {});
-            Object.assign(householdData.notes, val.notes || {});
-            Object.assign(householdData.favorites, val.favorites || {});
-            Object.assign(householdData.good, val.good || {});
-            Object.assign(householdData.ratings, val.ratings || {});
-            if (val.userTitles) householdData.userTitles = val.userTitles;
-            if (val.categories) householdData.categories = val.categories;
+            // Two-Way Safe Merge: Never let empty cloud data wipe local selections!
+            householdData.lists = { ...(val.lists || {}), ...householdData.lists };
+            householdData.notes = { ...(val.notes || {}), ...householdData.notes };
+            householdData.favorites = { ...(val.favorites || {}), ...householdData.favorites };
+            householdData.good = { ...(val.good || {}), ...householdData.good };
+            householdData.ratings = { ...(val.ratings || {}), ...householdData.ratings };
+            if (val.userTitles && val.userTitles.length) householdData.userTitles = val.userTitles;
+            if (val.categories && val.categories.length) householdData.categories = val.categories;
             if (val.excludedGenres) householdData.excludedGenres = val.excludedGenres;
             if (val.hideCompleted !== undefined) {
               householdData.hideCompleted = val.hideCompleted;
@@ -539,7 +527,7 @@
     }
 
     async function pushHouseholdSync() {
-      saveLocal(); // Always save instantly to phone memory first!
+      saveLocal(); // Save instantly to device memory first!
       if (!db || !activeHousehold) {
         document.getElementById('syncText').textContent = 'Saved';
         return;
@@ -579,7 +567,7 @@
       hideAllModals();
     };
 
-    // --- 4. Persistent Hide Completed ---
+    // --- 4. Hide Completed (Only for Front Page / Inbox) ---
     document.getElementById('hideCompleted').checked = householdData.hideCompleted;
     document.getElementById('hideCompleted').onchange = (e) => {
       householdData.hideCompleted = e.target.checked;
@@ -645,12 +633,19 @@
       html += `<button class="nav-manage-btn" id="openManageCategoriesBtn">✏️ Edit</button>`;
       container.innerHTML = html;
 
+      // Show "Hide Seen & Pass" checkbox ONLY on Front Page (Inbox & All Titles):
+      const wrapper = document.getElementById('hideCompletedWrapper');
+      if (wrapper) {
+        wrapper.style.display = (currentFilter === 'all' || currentFilter === 'uncategorized') ? 'flex' : 'none';
+      }
+
       container.querySelectorAll('.nav-tab').forEach(tab => {
         tab.onclick = () => {
           container.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
           tab.classList.add('active');
           currentFilter = tab.getAttribute('data-list');
           page = 1;
+          renderNavTabs();
           renderFeed();
         };
       });
@@ -658,7 +653,7 @@
       document.getElementById('openManageCategoriesBtn').onclick = openCategoriesModal;
     }
 
-    // --- 7. Auto-Combine Multiple Catalog Files ---
+    // --- 7. Auto-Combine Both Catalog Files ---
     async function loadCatalog() {
       catalog = [];
       const catalogFiles = ['catalog.json', 'catalog_2.json'];
@@ -686,7 +681,7 @@
       renderFeed();
     }
 
-    // --- 8. List Movement Logic (Instantly leaves Inbox when categorized!) ---
+    // --- 8. List Movement (Instantly removes from Inbox when categorized!) ---
     window.setList = function(titleId, listName) {
       const prev = householdData.lists[titleId] || 'uncategorized';
       if (prev === listName) return;
@@ -698,7 +693,7 @@
       
       pushHouseholdSync();
       renderNavTabs();
-      renderFeed(); // Automatically removes it from Inbox view!
+      renderFeed();
     };
 
     document.getElementById('undoBtn').onclick = () => {
@@ -717,7 +712,7 @@
       pushHouseholdSync();
     };
 
-    // --- 9. Filtering & Card Engine ---
+    // --- 9. Filtering Engine ---
     function getFilteredTitles() {
       const search = document.getElementById('searchInput').value.toLowerCase();
       const format = document.getElementById('formatFilter').value;
@@ -736,8 +731,8 @@
         if (currentFilter === 'good' && !householdData.good[item.id]) return false;
         if (currentFilter !== 'all' && currentFilter !== 'uncategorized' && currentFilter !== 'favorites' && currentFilter !== 'good' && assigned !== currentFilter) return false;
 
-        // Hide Seen & Pass check
-        if (hideDone && (assigned === 'seen' || assigned === 'no')) return false;
+        // "Hide Seen & Pass" ONLY applies on Front Page (All & Inbox):
+        if (hideDone && (currentFilter === 'all' || currentFilter === 'uncategorized') && (assigned === 'seen' || assigned === 'no')) return false;
         
         if (format && item.format !== format) return false;
 
@@ -784,8 +779,8 @@
         container.innerHTML = `
           <div style="text-align:center; padding:32px 16px; color:var(--muted);">
             <div style="font-size:2rem; margin-bottom:8px;">${currentFilter === 'uncategorized' ? '🎉' : '🍿'}</div>
-            <strong>${currentFilter === 'uncategorized' ? 'Inbox is clear!' : 'No titles found in this list!'}</strong><br>
-            ${currentFilter === 'uncategorized' ? 'All titles have been categorized into their folders. Tap "📚 All Titles" to see everything.' : 'Try adjusting your search or filters.'}
+            <strong>${currentFilter === 'uncategorized' ? 'Inbox is clear!' : 'No titles in this folder!'}</strong><br>
+            ${currentFilter === 'uncategorized' ? 'All titles have been placed into folders. Tap "All Titles" to view everything.' : 'Try adjusting your search or filters.'}
           </div>
         `;
         document.getElementById('loadMoreContainer').style.display = 'none';
@@ -815,11 +810,6 @@
         const ls = item.latestSeason;
         const endStr = ls.end ? `ended ${ls.end}` : (ls.status || 'End unverified');
         seasonBadge = `<div class="badge badge-green" style="margin-top:4px;">Season ${ls.number} (${ls.premiere} to ${endStr})</div>`;
-      }
-
-      let matchBadge = '';
-      if (item.matchedFavorite) {
-        matchBadge = `<div class="badge badge-match" style="margin-top:4px;">✨ ${item.matchedFavorite}</div>`;
       }
 
       let starsHTML = [1,2,3,4,5].map(s => `
@@ -854,7 +844,6 @@
                 ${(item.genres || []).map(g => `<span class="badge">${g}</span>`).join('')}
               </div>
               ${seasonBadge}
-              ${matchBadge}
               <p class="card-summary">${item.summary || ''}</p>
             </div>
             <div>
@@ -988,7 +977,6 @@
             summary: item.overview || '',
             cover_url: cover,
             trailerStatus: 'not_verified',
-            matchedFavorite: `Fresh Release (${releaseDate || 'Recent'})`,
             userAdded: true
           });
 
@@ -1013,14 +1001,233 @@
       pushHouseholdSync();
       renderNavTabs();
       renderFeed();
-      alert(`Added ${pendingFresh20.length} fresh releases to your catalog!`);
+      alert(`Added ${pendingFresh20.length} fresh releases!`);
       pendingFresh20 = [];
       hideAllModals();
     };
 
     document.getElementById('closeFresh20Btn').onclick = hideAllModals;
 
-    // --- 11. Dock Listeners ---
+    // --- 12. Smart 100-Title Importer ---
+    document.getElementById('fetchTmdbBatchBtn').onclick = async () => {
+      const apiKey = getTmdbKey();
+      if (!apiKey) { alert("Please enter and save your TMDB API Key above first!"); return; }
+      
+      const strategy = document.getElementById('importStrategySelect').value;
+      const fmt = document.getElementById('importFormat').value;
+      const lang = document.getElementById('importLang').value;
+      const statusBox = document.getElementById('importStatusBox');
+
+      statusBox.innerHTML = `<strong>Analyzing & pulling 100 titles...</strong>`;
+      pendingTmdbBatch = [];
+
+      let withoutGenreIds = [27]; // Horror
+      const excluded = householdData.excludedGenres || [];
+      excluded.forEach(g => { if (TMDB_GENRE_TO_ID[g]) withoutGenreIds.push(...TMDB_GENRE_TO_ID[g]); });
+      const withoutStr = withoutGenreIds.join(',');
+
+      const existingTitles = new Set([...catalog, ...householdData.userTitles].map(t => `${t.title.toLowerCase()}_${t.year}`));
+      const excludedSet = new Set(excluded);
+      let duplicatesCount = 0;
+
+      try {
+        if (strategy === 'smart') {
+          const anchor = document.getElementById('smartAnchorSelect').value;
+          const allItems = [...catalog, ...householdData.userTitles];
+          
+          let seedItems = allItems.filter(i => {
+            const r = householdData.ratings[i.id] || 0;
+            if (anchor === 'stars_only') return r >= 4;
+            if (anchor === 'fav_only') return householdData.favorites[i.id];
+            if (anchor === 'good_only') return householdData.good[i.id];
+            return householdData.favorites[i.id] || householdData.good[i.id] || r >= 4;
+          });
+
+          if (seedItems.length === 0) seedItems = allItems.filter(i => i.shortlist).slice(0, 5);
+
+          const genreCounts = {};
+          seedItems.forEach(i => {
+            (i.genres || []).forEach(g => { genreCounts[g] = (genreCounts[g] || 0) + 1; });
+          });
+
+          const sortedGenres = Object.keys(genreCounts).sort((a,b) => genreCounts[b] - genreCounts[a]);
+          const topFavNames = seedItems.slice(0, 3).map(i => i.title).join(', ');
+          const topGenreName = sortedGenres[0] || "Comedy";
+          
+          let withGenreId = "";
+          for (let id in GENRE_MAP) {
+            if (GENRE_MAP[id].toLowerCase() === topGenreName.toLowerCase()) { withGenreId = id; break; }
+          }
+
+          const smartStorageKey = `tmdb_smart_${anchor}_${fmt}_${lang}_${withGenreId}`;
+          let pageNum = parseInt(localStorage.getItem(smartStorageKey)) || 1;
+          let loops = 0;
+
+          while (pendingTmdbBatch.length < 100 && loops < 12) {
+            loops++;
+            const endpoints = [];
+            if (fmt === 'both' || fmt === 'movie') {
+              let url = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&without_genres=${withoutStr}&sort_by=vote_count.desc&page=${pageNum}`;
+              if (withGenreId) url += `&with_genres=${withGenreId}`;
+              if (lang) url += `&with_original_language=${lang.slice(0,2)}`;
+              endpoints.push({ type: 'Movie', url });
+            }
+            if (fmt === 'both' || fmt === 'tv') {
+              let url = `https://api.themoviedb.org/3/discover/tv?api_key=${apiKey}&without_genres=${withoutStr}&sort_by=vote_count.desc&page=${pageNum}`;
+              if (withGenreId) url += `&with_genres=${withGenreId}`;
+              if (lang) url += `&with_original_language=${lang.slice(0,2)}`;
+              endpoints.push({ type: 'TV', url });
+            }
+
+            let results = [];
+            for (let ep of endpoints) {
+              const res = await fetch(ep.url);
+              const data = await res.json();
+              if (data.results && data.results.length) results.push(...data.results.map(r => ({ ...r, _format: ep.type })));
+            }
+            if (results.length === 0) break;
+
+            for (let item of results) {
+              const gIds = item.genre_ids || [];
+              if (gIds.includes(27)) continue;
+              const genres = gIds.map(id => GENRE_MAP[id]).filter(Boolean);
+              if (genres.some(g => excludedSet.has(g))) continue;
+
+              const title = item.title || item.name;
+              const releaseDate = item.release_date || item.first_air_date || '';
+              const itemYear = parseInt(releaseDate.slice(0, 4)) || 2021;
+
+              if (existingTitles.has(`${title.toLowerCase()}_${itemYear}`)) { duplicatesCount++; continue; }
+              existingTitles.add(`${title.toLowerCase()}_${itemYear}`);
+              
+              const cover = item.poster_path ? `https://image.tmdb.org/t/p/w300_and_h450_face${item.poster_path}` : '';
+              let audience = 'Adults';
+              if (genres.includes('Family') || genres.includes('Kids')) audience = 'Family';
+              else if (item.vote_average >= 7.0 && !genres.includes('Crime')) audience = 'Teens+';
+
+              pendingTmdbBatch.push({
+                id: 4000 + (catalog.length + householdData.userTitles.length + pendingTmdbBatch.length),
+                title: title,
+                year: itemYear,
+                format: item._format,
+                platform: 'Theatrical / Streaming',
+                audience: audience,
+                genres: genres,
+                summary: item.overview || '',
+                cover_url: cover,
+                trailerStatus: 'not_verified',
+                userAdded: true
+              });
+              if (pendingTmdbBatch.length >= 100) break;
+            }
+            pageNum++;
+          }
+          localStorage.setItem(smartStorageKey, pageNum);
+
+          statusBox.innerHTML = `
+            <strong>Found ${pendingTmdbBatch.length} suggested titles!</strong><br>
+            ✨ Inspired by: <em>${topFavNames || topGenreName}</em>.<br>
+            <div style="margin-top:6px; font-size:0.75rem; color:var(--muted);">
+              Sample: ${pendingTmdbBatch.slice(0, 4).map(t => `${t.title} (${t.year})`).join(', ')}...
+            </div>
+          `;
+        } else {
+          const year = parseInt(document.getElementById('importYear').value) || 2021;
+          const genreId = document.getElementById('importGenreSelect').value;
+          const storageKey = `tmdb_page_${year}_${genreId}_${fmt}_${lang}`;
+          let pageNum = parseInt(localStorage.getItem(storageKey)) || 1;
+          let loops = 0;
+
+          while (pendingTmdbBatch.length < 100 && loops < 12) {
+            loops++;
+            const endpoints = [];
+            if (fmt === 'both' || fmt === 'movie') {
+              let url = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&without_genres=${withoutStr}&primary_release_year=${year}&sort_by=popularity.desc&page=${pageNum}`;
+              if (genreId) url += `&with_genres=${genreId}`;
+              if (lang) url += `&with_original_language=${lang.slice(0,2)}`;
+              endpoints.push({ type: 'Movie', url });
+            }
+            if (fmt === 'both' || fmt === 'tv') {
+              let url = `https://api.themoviedb.org/3/discover/tv?api_key=${apiKey}&without_genres=${withoutStr}&first_air_date_year=${year}&sort_by=popularity.desc&page=${pageNum}`;
+              if (genreId) url += `&with_genres=${genreId}`;
+              if (lang) url += `&with_original_language=${lang.slice(0,2)}`;
+              endpoints.push({ type: 'TV', url });
+            }
+
+            let results = [];
+            for (let ep of endpoints) {
+              const res = await fetch(ep.url);
+              const data = await res.json();
+              if (data.results && data.results.length) results.push(...data.results.map(r => ({ ...r, _format: ep.type })));
+            }
+            if (results.length === 0) break;
+
+            for (let item of results) {
+              const gIds = item.genre_ids || [];
+              if (gIds.includes(27)) continue;
+              const genres = gIds.map(id => GENRE_MAP[id]).filter(Boolean);
+              if (genres.some(g => excludedSet.has(g))) continue;
+
+              const title = item.title || item.name;
+              const releaseDate = item.release_date || item.first_air_date || '';
+              const itemYear = parseInt(releaseDate.slice(0, 4)) || year;
+
+              if (existingTitles.has(`${title.toLowerCase()}_${itemYear}`)) { duplicatesCount++; continue; }
+              existingTitles.add(`${title.toLowerCase()}_${itemYear}`);
+              
+              const cover = item.poster_path ? `https://image.tmdb.org/t/p/w300_and_h450_face${item.poster_path}` : '';
+              let audience = 'Adults';
+              if (genres.includes('Family') || genres.includes('Kids')) audience = 'Family';
+              else if (item.vote_average >= 7.0 && !genres.includes('Crime')) audience = 'Teens+';
+
+              pendingTmdbBatch.push({
+                id: 3000 + (catalog.length + householdData.userTitles.length + pendingTmdbBatch.length),
+                title: title,
+                year: itemYear,
+                format: item._format,
+                platform: 'Theatrical / Streaming',
+                audience: audience,
+                genres: genres,
+                summary: item.overview || '',
+                cover_url: cover,
+                trailerStatus: 'not_verified',
+                userAdded: true
+              });
+              if (pendingTmdbBatch.length >= 100) break;
+            }
+            pageNum++;
+          }
+          localStorage.setItem(storageKey, pageNum);
+
+          statusBox.innerHTML = `
+            <strong>Found ${pendingTmdbBatch.length} new titles</strong> for ${year} (${duplicatesCount} duplicates skipped).<br>
+            <div style="margin-top:6px; font-size:0.75rem; color:var(--muted);">
+              Sample: ${pendingTmdbBatch.slice(0, 4).map(t => `${t.title} (${t.year})`).join(', ')}...
+            </div>
+          `;
+        }
+
+        if (pendingTmdbBatch.length > 0) {
+          document.getElementById('commitTmdbBatchBtn').classList.remove('hidden');
+        }
+      } catch (err) {
+        statusBox.innerHTML = `<span style="color:#c00;">Failed: ${err.message}</span>`;
+      }
+    };
+
+    document.getElementById('commitTmdbBatchBtn').onclick = () => {
+      if (pendingTmdbBatch.length === 0) return;
+      householdData.userTitles.push(...pendingTmdbBatch);
+      pushHouseholdSync();
+      renderNavTabs();
+      renderFeed();
+      alert(`Added ${pendingTmdbBatch.length} new titles!`);
+      pendingTmdbBatch = [];
+      document.getElementById('commitTmdbBatchBtn').classList.add('hidden');
+      hideAllModals();
+    };
+
+    // --- 13. Modals & Settings Handlers ---
     document.getElementById('dockDiscover').onclick = () => hideAllModals();
     document.getElementById('dockImport').onclick = () => {
       hideAllModals();
@@ -1065,10 +1272,9 @@
       a.click();
     };
 
-    // Genre Filter Modal Handlers
+    // Exclusion Modal Handlers
     function updateExcludedBadge() {
-      const count = (householdData.excludedGenres || []).length;
-      document.getElementById('excludeCountBadge').textContent = count;
+      document.getElementById('excludeCountBadge').textContent = (householdData.excludedGenres || []).length;
     }
     function openGenreModal() {
       hideAllModals();
@@ -1102,7 +1308,7 @@
     };
     document.getElementById('openGenreFilterBtn').onclick = openGenreModal;
 
-    // Folder Management
+    // Folder Management Handlers
     function openCategoriesModal() {
       hideAllModals();
       const listContainer = document.getElementById('categoryManageList');
@@ -1155,7 +1361,7 @@
       openCategoriesModal();
     };
 
-    // Tonight's Pick & Share
+    // Roulette & Share Handlers
     document.getElementById('pickRandomBtn').onclick = () => {
       const eligible = getFilteredTitles();
       if (eligible.length === 0) { alert("No titles in this view!"); return; }
