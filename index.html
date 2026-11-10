@@ -43,6 +43,8 @@
     .nav-scroll::-webkit-scrollbar { display: none; }
     .nav-tab { background: var(--badge); border: 1px solid transparent; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; color: var(--muted); cursor: pointer; }
     .nav-tab.active { background: var(--green-primary); color: #fff; }
+    .nav-tab.inbox { background: #E0E7FF; color: #3730A3; }
+    .nav-tab.inbox.active { background: #3730A3; color: #fff; }
     .nav-tab.special { background: #FFE8D6; color: #B05D24; }
     .nav-tab.special.active { background: #B05D24; color: #fff; }
     .nav-manage-btn { background: transparent; border: 1px dashed var(--green-primary); color: var(--green-primary); padding: 5px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
@@ -79,8 +81,6 @@
     .badge-bar { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0; }
     .badge { font-size: 0.68rem; padding: 2px 6px; border-radius: 4px; background: var(--badge); color: var(--text); font-weight: 500; }
     .badge-green { background: var(--green-light); color: var(--green-dark); }
-    .badge-match { background: #E0AAFF; color: #3C096C; font-weight: 600; }
-    .badge-fresh { background: #FEF3C7; color: #92400E; font-weight: 600; }
     
     .list-picker-grid { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
     .list-chip { background: var(--badge); border: 1px solid transparent; border-radius: 6px; padding: 6px 8px; font-size: 0.7rem; font-weight: 600; text-align: center; cursor: pointer; flex-grow: 1; }
@@ -107,7 +107,7 @@
   <header>
     <div>
       <h1>Our Watchlist</h1>
-      <div id="householdDisplay" style="font-size:0.75rem; color:#D8F3DC;">Local Mode</div>
+      <div id="householdDisplay" style="font-size:0.75rem; color:#D8F3DC;">Loading...</div>
     </div>
     <div class="status-pill">
       <div id="syncDot" class="status-dot"></div>
@@ -400,9 +400,9 @@
     let householdData = {
       lists: {},
       notes: {},
-      favorites: {},      // titleId -> true
-      good: {},           // titleId -> true
-      ratings: {},        // titleId -> 1..5
+      favorites: {},
+      good: {},
+      ratings: {},
       userTitles: [],
       categories: [...DEFAULT_CATEGORIES],
       excludedGenres: ["War", "Western"],
@@ -410,14 +410,39 @@
     };
     let activeHousehold = null;
     let lastMove = null;
-    let currentFilter = 'all'; // Main screen shows all titles together!
+    let currentFilter = 'uncategorized'; // DEFAULT IS INBOX: Any categorized movie leaves the main screen!
     let pageSize = 25;
     let page = 1;
     let db = null;
     let pendingTmdbBatch = [];
     let pendingFresh20 = [];
 
-    // --- 1. Cloud Initializer ---
+    // --- 1. Robust Local State Saver ---
+    function saveLocal() {
+      localStorage.setItem('ow_household_data', JSON.stringify({
+        lists: householdData.lists,
+        notes: householdData.notes,
+        favorites: householdData.favorites,
+        good: householdData.good,
+        ratings: householdData.ratings,
+        categories: householdData.categories,
+        excludedGenres: householdData.excludedGenres,
+        hideCompleted: householdData.hideCompleted
+      }));
+    }
+
+    function loadLocal() {
+      const saved = localStorage.getItem('ow_household_data');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          Object.assign(householdData, parsed);
+        } catch(e) {}
+      }
+    }
+    loadLocal();
+
+    // --- 2. Cloud Initializer ---
     function initFirebase() {
       const cfg = localStorage.getItem('ow_firebase_config');
       if (!cfg || !window.FB) return;
@@ -432,23 +457,26 @@
     }
     window.addEventListener('firebase-ready', initFirebase);
 
-    // --- 2. Shared Login & Sync ---
+    // --- 3. Shared Login & Sync ---
     async function connectHousehold(username, password, showPrompt = true) {
       username = username.toLowerCase().trim();
       if (!username || !password) {
         if (showPrompt) alert("Enter both username and password.");
         return;
       }
+      activeHousehold = username;
+      localStorage.setItem('ow_household_user', username);
+      localStorage.setItem('ow_household_pass', password);
+      document.getElementById('householdDisplay').textContent = `Synced: ${username}`;
+      document.getElementById('logoutBtn').classList.remove('hidden');
+
       if (!db) {
-        activeHousehold = username;
-        localStorage.setItem('ow_household_user', username);
-        localStorage.setItem('ow_household_pass', password);
         document.getElementById('householdDisplay').textContent = `Local: ${username}`;
-        document.getElementById('logoutBtn').classList.remove('hidden');
         if (showPrompt) alert(`Connected locally as "${username}". Add Firebase config in Settings to sync.`);
         hideAllModals();
         return;
       }
+
       document.getElementById('syncText').textContent = 'Connecting...';
       try {
         const hhDocRef = window.FB.doc(db, "households", username);
@@ -465,43 +493,38 @@
           await window.FB.setDoc(hhDocRef, { 
             passcode: password, 
             created: new Date().toISOString(), 
-            lists: {}, 
-            notes: {}, 
-            favorites: {},
-            good: {},
-            ratings: {},
-            userTitles: [], 
-            categories: DEFAULT_CATEGORIES,
-            excludedGenres: ["War", "Western"],
-            hideCompleted: true
+            lists: householdData.lists, 
+            notes: householdData.notes, 
+            favorites: householdData.favorites,
+            good: householdData.good,
+            ratings: householdData.ratings,
+            userTitles: householdData.userTitles, 
+            categories: householdData.categories,
+            excludedGenres: householdData.excludedGenres,
+            hideCompleted: householdData.hideCompleted
           });
         }
-        activeHousehold = username;
-        localStorage.setItem('ow_household_user', username);
-        localStorage.setItem('ow_household_pass', password);
-        document.getElementById('householdDisplay').textContent = `Synced: ${username}`;
-        document.getElementById('logoutBtn').classList.remove('hidden');
+
         document.getElementById('syncDot').classList.remove('error');
         document.getElementById('syncText').textContent = 'Connected';
 
         window.FB.onSnapshot(hhDocRef, (docSnap) => {
           if (docSnap.exists()) {
             const val = docSnap.data();
-            householdData.lists = val.lists || {};
-            householdData.notes = val.notes || {};
-            householdData.favorites = val.favorites || {};
-            householdData.good = val.good || {};
-            householdData.ratings = val.ratings || {};
-            householdData.userTitles = val.userTitles || [];
-            householdData.categories = (val.categories && val.categories.length) ? val.categories : [...DEFAULT_CATEGORIES];
-            householdData.excludedGenres = val.excludedGenres || ["War", "Western"];
-            
+            // Merge cloud data
+            Object.assign(householdData.lists, val.lists || {});
+            Object.assign(householdData.notes, val.notes || {});
+            Object.assign(householdData.favorites, val.favorites || {});
+            Object.assign(householdData.good, val.good || {});
+            Object.assign(householdData.ratings, val.ratings || {});
+            if (val.userTitles) householdData.userTitles = val.userTitles;
+            if (val.categories) householdData.categories = val.categories;
+            if (val.excludedGenres) householdData.excludedGenres = val.excludedGenres;
             if (val.hideCompleted !== undefined) {
               householdData.hideCompleted = val.hideCompleted;
               document.getElementById('hideCompleted').checked = val.hideCompleted;
-              localStorage.setItem('ow_hide_completed', val.hideCompleted);
             }
-
+            saveLocal();
             updateExcludedBadge();
             renderNavTabs();
             renderFeed();
@@ -516,8 +539,9 @@
     }
 
     async function pushHouseholdSync() {
+      saveLocal(); // Always save instantly to phone memory first!
       if (!db || !activeHousehold) {
-        localStorage.setItem('ow_local_data', JSON.stringify(householdData));
+        document.getElementById('syncText').textContent = 'Saved';
         return;
       }
       document.getElementById('syncText').textContent = 'Saving...';
@@ -537,8 +561,7 @@
         document.getElementById('syncText').textContent = 'Synced';
         document.getElementById('syncDot').classList.remove('error');
       } catch (e) {
-        document.getElementById('syncText').textContent = 'Not saved';
-        document.getElementById('syncDot').classList.add('error');
+        document.getElementById('syncText').textContent = 'Saved local';
       }
     }
 
@@ -556,25 +579,19 @@
       hideAllModals();
     };
 
-    // --- 3. Persistent Hide Completed ---
-    const savedHide = localStorage.getItem('ow_hide_completed');
-    if (savedHide !== null) {
-      householdData.hideCompleted = savedHide === 'true';
-    }
+    // --- 4. Persistent Hide Completed ---
     document.getElementById('hideCompleted').checked = householdData.hideCompleted;
-
     document.getElementById('hideCompleted').onchange = (e) => {
       householdData.hideCompleted = e.target.checked;
-      localStorage.setItem('ow_hide_completed', e.target.checked);
       pushHouseholdSync();
       page = 1;
       renderFeed();
     };
 
-    // --- 4. Star Ratings, Favorites & Good Toggles ---
+    // --- 5. Star Ratings, Favorites & Good Toggles ---
     window.setRating = function(titleId, stars) {
       if (householdData.ratings[titleId] === stars) {
-        delete householdData.ratings[titleId]; // Tap same star to clear
+        delete householdData.ratings[titleId];
       } else {
         householdData.ratings[titleId] = stars;
       }
@@ -598,7 +615,7 @@
       renderFeed();
     };
 
-    // --- 5. Navigation & Tabs ---
+    // --- 6. Navigation Tabs ---
     function renderNavTabs() {
       const container = document.getElementById('listNav');
       const cats = householdData.categories || DEFAULT_CATEGORIES;
@@ -615,8 +632,8 @@
       });
 
       let html = `
+        <button class="nav-tab inbox ${currentFilter === 'uncategorized' ? 'active' : ''}" data-list="uncategorized">📥 Inbox (${counts.uncategorized || 0})</button>
         <button class="nav-tab ${currentFilter === 'all' ? 'active' : ''}" data-list="all">📚 All Titles (${counts.all})</button>
-        <button class="nav-tab ${currentFilter === 'uncategorized' ? 'active' : ''}" data-list="uncategorized">📥 Inbox (${counts.uncategorized || 0})</button>
         <button class="nav-tab special ${currentFilter === 'favorites' ? 'active' : ''}" data-list="favorites">❤️ Favs (${counts.favorites})</button>
         <button class="nav-tab special ${currentFilter === 'good' ? 'active' : ''}" data-list="good">👍 Good (${counts.good})</button>
       `;
@@ -641,157 +658,35 @@
       document.getElementById('openManageCategoriesBtn').onclick = openCategoriesModal;
     }
 
-    // --- 6. Genre Exclusion ---
-    function updateExcludedBadge() {
-      const count = (householdData.excludedGenres || []).length;
-      document.getElementById('excludeCountBadge').textContent = count;
-    }
-
-    function openGenreModal() {
-      hideAllModals();
-      const container = document.getElementById('genreCheckboxList');
-      const excluded = new Set(householdData.excludedGenres || []);
-      container.innerHTML = ALL_AVAILABLE_GENRES.map(g => `
-        <label class="genre-pill">
-          <input type="checkbox" value="${g}" ${excluded.has(g) ? 'checked' : ''}>
-          <span>${g}</span>
-        </label>
-      `).join('');
-      document.getElementById('genreModal').classList.remove('hidden');
-    }
-
-    document.getElementById('saveExcludedGenresBtn').onclick = () => {
-      const checked = [];
-      document.querySelectorAll('#genreCheckboxList input:checked').forEach(cb => checked.push(cb.value));
-      householdData.excludedGenres = checked;
-      pushHouseholdSync();
-      updateExcludedBadge();
-      page = 1;
-      renderFeed();
-      hideAllModals();
-    };
-
-    document.getElementById('resetExcludedGenresBtn').onclick = () => {
-      householdData.excludedGenres = [];
-      pushHouseholdSync();
-      updateExcludedBadge();
-      page = 1;
-      renderFeed();
-      hideAllModals();
-    };
-
-    document.getElementById('openGenreFilterBtn').onclick = openGenreModal;
-
-    // --- 7. Manage Folders & Categories ---
-    function openCategoriesModal() {
-      hideAllModals();
-      const listContainer = document.getElementById('categoryManageList');
-      const cats = householdData.categories || DEFAULT_CATEGORIES;
-
-      listContainer.innerHTML = cats.map(c => `
-        <div class="category-manage-item">
-          <input type="text" value="${c.label}" id="cat-rename-${c.key}" style="flex:1; padding:6px 8px; font-size:0.8rem;">
-          <button class="btn btn-outline" style="padding:4px 8px; font-size:0.75rem;" onclick="renameCategory('${c.key}')">Rename</button>
-          <button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="deleteCategory('${c.key}')">✕</button>
-        </div>
-      `).join('');
-
-      document.getElementById('categoriesModal').classList.remove('hidden');
-    }
-
-    window.renameCategory = function(key) {
-      const input = document.getElementById(`cat-rename-${key}`);
-      const newLabel = input.value.trim();
-      if (!newLabel) return;
-      const cat = householdData.categories.find(c => c.key === key);
-      if (cat) {
-        cat.label = newLabel;
-        pushHouseholdSync();
-        renderNavTabs();
-        renderFeed();
-      }
-    };
-
-    window.deleteCategory = function(key) {
-      const cat = householdData.categories.find(c => c.key === key);
-      const name = cat ? cat.label : key;
-      if (!confirm(`Delete folder "${name}"? Titles in this folder will safely return to Inbox.`)) return;
-
-      householdData.categories = householdData.categories.filter(c => c.key !== key);
-      for (let id in householdData.lists) {
-        if (householdData.lists[id] === key) delete householdData.lists[id];
-      }
-      if (currentFilter === key) currentFilter = 'all';
-
-      pushHouseholdSync();
-      renderNavTabs();
-      renderFeed();
-      openCategoriesModal();
-    };
-
-    document.getElementById('addCategoryBtn').onclick = () => {
-      const input = document.getElementById('newCategoryInput');
-      const name = input.value.trim();
-      if (!name) return;
-      const key = 'cat_' + Date.now();
-      householdData.categories.push({ key, label: name });
-      input.value = '';
-      pushHouseholdSync();
-      renderNavTabs();
-      renderFeed();
-      openCategoriesModal();
-    };
-
-    // --- 8. Tonight's Pick & Share List ---
-    document.getElementById('pickRandomBtn').onclick = () => {
-      const eligible = getFilteredTitles();
-      if (eligible.length === 0) { alert("No titles in this view!"); return; }
-      showRoulette(eligible[Math.floor(Math.random() * eligible.length)]);
-    };
-
-    function showRoulette(item) {
-      hideAllModals();
-      const content = document.getElementById('rouletteContent');
-      content.innerHTML = `
-        <div style="font-weight:700; font-size:1.15rem; color:var(--green-dark);">${item.title} (${item.year})</div>
-        <div style="font-size:0.8rem; color:var(--muted); margin:4px 0;">${item.format} • ${(item.genres||[]).join(', ')}</div>
-        <img src="${item.cover_url||''}" style="width:120px; height:180px; object-fit:cover; border-radius:8px; margin:8px auto; display:block;" onerror="this.style.display='none'">
-        <p style="font-size:0.82rem; color:var(--text); text-align:left; margin-top:6px;">${item.summary||''}</p>
-      `;
-      document.getElementById('rouletteModal').classList.remove('hidden');
-    }
-
-    document.getElementById('rerollBtn').onclick = () => {
-      const eligible = getFilteredTitles();
-      if (eligible.length > 0) showRoulette(eligible[Math.floor(Math.random() * eligible.length)]);
-    };
-    document.getElementById('closeRouletteBtn').onclick = hideAllModals;
-
-    document.getElementById('shareListBtn').onclick = () => {
-      const eligible = getFilteredTitles();
-      if (eligible.length === 0) { alert("Current list is empty!"); return; }
-      const text = `🎬 *Our Watchlist (${currentFilter.toUpperCase()})*:\n` + eligible.slice(0, 30).map(i => `• ${i.title} (${i.year})`).join('\n') + (eligible.length > 30 ? `\n...and ${eligible.length - 30} more!` : '');
-      navigator.clipboard.writeText(text);
-      alert(`Copied ${eligible.length} titles to clipboard!`);
-    };
-
-    // --- 9. Feed Filtering & Sorting ---
+    // --- 7. Auto-Combine Multiple Catalog Files ---
     async function loadCatalog() {
-      try {
-        const res = await fetch('catalog.json');
-        catalog = await res.json();
-      } catch (e) {
-        catalog = window.CATALOG_DATA || [];
+      catalog = [];
+      const catalogFiles = ['catalog.json', 'catalog_2.json'];
+      
+      for (const fileName of catalogFiles) {
+        try {
+          const res = await fetch(fileName);
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data)) catalog.push(...data);
+          }
+        } catch(e) {}
       }
-      const savedLocal = localStorage.getItem('ow_local_data');
-      if (savedLocal && !activeHousehold) {
-        try { Object.assign(householdData, JSON.parse(savedLocal)); } catch(e){}
-      }
+
+      // Deduplicate by ID
+      const seenIds = new Set();
+      catalog = catalog.filter(item => {
+        if (seenIds.has(item.id)) return false;
+        seenIds.add(item.id);
+        return true;
+      });
+
       updateExcludedBadge();
       renderNavTabs();
       renderFeed();
     }
 
+    // --- 8. List Movement Logic (Instantly leaves Inbox when categorized!) ---
     window.setList = function(titleId, listName) {
       const prev = householdData.lists[titleId] || 'uncategorized';
       if (prev === listName) return;
@@ -801,9 +696,9 @@
       if (listName === 'uncategorized') delete householdData.lists[titleId];
       else householdData.lists[titleId] = listName;
       
-      renderNavTabs();
-      renderFeed();
       pushHouseholdSync();
+      renderNavTabs();
+      renderFeed(); // Automatically removes it from Inbox view!
     };
 
     document.getElementById('undoBtn').onclick = () => {
@@ -812,9 +707,9 @@
       else householdData.lists[lastMove.titleId] = lastMove.prevList;
       lastMove = null;
       document.getElementById('undoBtn').disabled = true;
+      pushHouseholdSync();
       renderNavTabs();
       renderFeed();
-      pushHouseholdSync();
     };
 
     window.saveNote = function(titleId, text) {
@@ -822,6 +717,7 @@
       pushHouseholdSync();
     };
 
+    // --- 9. Filtering & Card Engine ---
     function getFilteredTitles() {
       const search = document.getElementById('searchInput').value.toLowerCase();
       const format = document.getElementById('formatFilter').value;
@@ -840,16 +736,16 @@
         if (currentFilter === 'good' && !householdData.good[item.id]) return false;
         if (currentFilter !== 'all' && currentFilter !== 'uncategorized' && currentFilter !== 'favorites' && currentFilter !== 'good' && assigned !== currentFilter) return false;
 
-        // Permanent Hide Seen & Pass check
+        // Hide Seen & Pass check
         if (hideDone && (assigned === 'seen' || assigned === 'no')) return false;
         
         if (format && item.format !== format) return false;
 
-        // Strict Horror & Custom Exclusions
+        // Strict Horror & Excluded Genres check
         const genres = item.genres || [];
         if (genres.includes('Horror') || genres.some(g => excluded.has(g))) return false;
 
-        // Collection Dropdown Filter
+        // Collection Filter
         if (coll === 'favorites' && !householdData.favorites[item.id]) return false;
         if (coll === 'good' && !householdData.good[item.id]) return false;
         if (coll === 'high_rated' && (householdData.ratings[item.id] || 0) < 4) return false;
@@ -859,7 +755,6 @@
         if (coll === 'renovation' && !item.renovation) return false;
         if (coll === '2019-2026' && !(item.year >= 2019 && item.year <= 2026)) return false;
 
-        // Search
         if (search) {
           const matchTarget = `${item.title} ${item.cast || ''} ${item.summary || ''} ${(item.matches||[]).join(' ')}`.toLowerCase();
           if (!matchTarget.includes(search)) return false;
@@ -888,9 +783,9 @@
       if (display.length === 0) {
         container.innerHTML = `
           <div style="text-align:center; padding:32px 16px; color:var(--muted);">
-            <div style="font-size:2rem; margin-bottom:8px;">🍿</div>
-            <strong>No titles found here!</strong><br>
-            Try selecting another folder above or adjust your search filters.
+            <div style="font-size:2rem; margin-bottom:8px;">${currentFilter === 'uncategorized' ? '🎉' : '🍿'}</div>
+            <strong>${currentFilter === 'uncategorized' ? 'Inbox is clear!' : 'No titles found in this list!'}</strong><br>
+            ${currentFilter === 'uncategorized' ? 'All titles have been categorized into their folders. Tap "📚 All Titles" to see everything.' : 'Try adjusting your search or filters.'}
           </div>
         `;
         document.getElementById('loadMoreContainer').style.display = 'none';
@@ -913,7 +808,7 @@
         <button class="list-chip ${assigned === c.key ? 'selected' : ''}" onclick="setList(${item.id}, '${c.key}')">${c.label}</button>
       `).join('');
 
-      chipsHTML += `<button class="list-chip ${assigned === 'uncategorized' ? 'selected' : ''}" onclick="setList(${item.id}, 'uncategorized')">Reset</button>`;
+      chipsHTML += `<button class="list-chip ${assigned === 'uncategorized' ? 'selected' : ''}" onclick="setList(${item.id}, 'uncategorized')">Inbox</button>`;
 
       let seasonBadge = '';
       if (item.format === 'TV' && item.latestSeason) {
@@ -927,7 +822,6 @@
         matchBadge = `<div class="badge badge-match" style="margin-top:4px;">✨ ${item.matchedFavorite}</div>`;
       }
 
-      // Star rating HTML
       let starsHTML = [1,2,3,4,5].map(s => `
         <button class="star-btn ${rating >= s ? 'filled' : ''}" onclick="setRating(${item.id}, ${s})" title="${s} Stars">★</button>
       `).join('');
@@ -944,7 +838,6 @@
               </div>
               <div class="card-meta">${item.year} • ${item.format} • ${item.platform || ''}</div>
               
-              <!-- Quick Reactions & Star Rating Bar -->
               <div class="reaction-bar">
                 <div class="stars-wrap">
                   ${starsHTML}
@@ -998,7 +891,7 @@
     };
     document.getElementById('modalCloseBtn').onclick = () => document.getElementById('coverModal').classList.add('hidden');
 
-    // --- 10. TMDB Suggestion & Pull Engine ---
+    // --- 10. TMDB & Fresh 20 Engine ---
     const GENRE_MAP = {
       28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy", 80: "Crime",
       99: "Documentary", 18: "Drama", 10751: "Family", 14: "Fantasy", 36: "History",
@@ -1014,7 +907,6 @@
     };
 
     function getTmdbKey() { return localStorage.getItem('ow_tmdb_key') || ''; }
-
     document.getElementById('saveTmdbKeyBtn').onclick = () => {
       const k = document.getElementById('tmdbKeyInput').value.trim();
       if (!k) return;
@@ -1032,18 +924,13 @@
       }
     };
 
-    // --- 11. Fresh 20 Releases (Last 6 Months) Engine ---
     document.getElementById('fetchFresh20Btn').onclick = async () => {
       const apiKey = getTmdbKey();
-      if (!apiKey) {
-        alert("Please tap 'Import 100' at the bottom and save your free TMDB API Key first!");
-        return;
-      }
+      if (!apiKey) { alert("Please tap 'Import 100' at the bottom and save your TMDB API Key first!"); return; }
 
       const today = new Date();
       const sixMonthsAgo = new Date();
       sixMonthsAgo.setMonth(today.getMonth() - 6);
-
       const endDate = today.toISOString().split('T')[0];
       const startDate = sixMonthsAgo.toISOString().split('T')[0];
 
@@ -1086,7 +973,6 @@
           existingTitles.add(`${title.toLowerCase()}_${itemYear}`);
 
           const cover = item.poster_path ? `https://image.tmdb.org/t/p/w300_and_h450_face${item.poster_path}` : '';
-          
           let audience = 'Adults';
           if (genres.includes('Family') || genres.includes('Kids')) audience = 'Family';
           else if (item.vote_average >= 7.0 && !genres.includes('Crime')) audience = 'Teens+';
@@ -1134,228 +1020,7 @@
 
     document.getElementById('closeFresh20Btn').onclick = hideAllModals;
 
-    // --- 12. Smart & Standard 100-Title Importer ---
-    document.getElementById('fetchTmdbBatchBtn').onclick = async () => {
-      const apiKey = getTmdbKey();
-      if (!apiKey) { alert("Please enter and save your TMDB API Key above first!"); return; }
-      
-      const strategy = document.getElementById('importStrategySelect').value;
-      const fmt = document.getElementById('importFormat').value;
-      const lang = document.getElementById('importLang').value;
-      const statusBox = document.getElementById('importStatusBox');
-
-      statusBox.innerHTML = `<strong>Analyzing & pulling 100 titles...</strong>`;
-      pendingTmdbBatch = [];
-
-      let withoutGenreIds = [27]; // Horror
-      const excluded = householdData.excludedGenres || [];
-      excluded.forEach(g => { if (TMDB_GENRE_TO_ID[g]) withoutGenreIds.push(...TMDB_GENRE_TO_ID[g]); });
-      const withoutStr = withoutGenreIds.join(',');
-
-      const existingTitles = new Set([...catalog, ...householdData.userTitles].map(t => `${t.title.toLowerCase()}_${t.year}`));
-      const excludedSet = new Set(excluded);
-      let duplicatesCount = 0;
-
-      try {
-        if (strategy === 'smart') {
-          const anchor = document.getElementById('smartAnchorSelect').value;
-          const allItems = [...catalog, ...householdData.userTitles];
-          
-          let seedItems = allItems.filter(i => {
-            const r = householdData.ratings[i.id] || 0;
-            if (anchor === 'stars_only') return r >= 4;
-            if (anchor === 'fav_only') return householdData.favorites[i.id];
-            if (anchor === 'good_only') return householdData.good[i.id];
-            return householdData.favorites[i.id] || householdData.good[i.id] || r >= 4;
-          });
-
-          if (seedItems.length === 0) seedItems = allItems.filter(i => i.shortlist).slice(0, 5);
-
-          const genreCounts = {};
-          seedItems.forEach(i => {
-            (i.genres || []).forEach(g => { genreCounts[g] = (genreCounts[g] || 0) + 1; });
-          });
-
-          const sortedGenres = Object.keys(genreCounts).sort((a,b) => genreCounts[b] - genreCounts[a]);
-          const topFavNames = seedItems.slice(0, 3).map(i => i.title).join(', ');
-          const topGenreName = sortedGenres[0] || "Comedy";
-          
-          let withGenreId = "";
-          for (let id in GENRE_MAP) {
-            if (GENRE_MAP[id].toLowerCase() === topGenreName.toLowerCase()) { withGenreId = id; break; }
-          }
-
-          const smartStorageKey = `tmdb_smart_${anchor}_${fmt}_${lang}_${withGenreId}`;
-          let pageNum = parseInt(localStorage.getItem(smartStorageKey)) || 1;
-          let loops = 0;
-
-          while (pendingTmdbBatch.length < 100 && loops < 12) {
-            loops++;
-            const endpoints = [];
-            if (fmt === 'both' || fmt === 'movie') {
-              let url = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&without_genres=${withoutStr}&sort_by=vote_count.desc&page=${pageNum}`;
-              if (withGenreId) url += `&with_genres=${withGenreId}`;
-              if (lang) url += `&with_original_language=${lang.slice(0,2)}`;
-              endpoints.push({ type: 'Movie', url });
-            }
-            if (fmt === 'both' || fmt === 'tv') {
-              let url = `https://api.themoviedb.org/3/discover/tv?api_key=${apiKey}&without_genres=${withoutStr}&sort_by=vote_count.desc&page=${pageNum}`;
-              if (withGenreId) url += `&with_genres=${withGenreId}`;
-              if (lang) url += `&with_original_language=${lang.slice(0,2)}`;
-              endpoints.push({ type: 'TV', url });
-            }
-
-            let results = [];
-            for (let ep of endpoints) {
-              const res = await fetch(ep.url);
-              const data = await res.json();
-              if (data.results && data.results.length) results.push(...data.results.map(r => ({ ...r, _format: ep.type })));
-            }
-            if (results.length === 0) break;
-
-            for (let item of results) {
-              const gIds = item.genre_ids || [];
-              if (gIds.includes(27)) continue;
-              const genres = gIds.map(id => GENRE_MAP[id]).filter(Boolean);
-              if (genres.some(g => excludedSet.has(g))) continue;
-
-              const title = item.title || item.name;
-              const releaseDate = item.release_date || item.first_air_date || '';
-              const itemYear = parseInt(releaseDate.slice(0, 4)) || 2021;
-
-              if (existingTitles.has(`${title.toLowerCase()}_${itemYear}`)) { duplicatesCount++; continue; }
-              existingTitles.add(`${title.toLowerCase()}_${itemYear}`);
-              
-              const cover = item.poster_path ? `https://image.tmdb.org/t/p/w300_and_h450_face${item.poster_path}` : '';
-              let audience = 'Adults';
-              if (genres.includes('Family') || genres.includes('Kids')) audience = 'Family';
-              else if (item.vote_average >= 7.0 && !genres.includes('Crime')) audience = 'Teens+';
-
-              pendingTmdbBatch.push({
-                id: 4000 + (catalog.length + householdData.userTitles.length + pendingTmdbBatch.length),
-                title: title,
-                year: itemYear,
-                format: item._format,
-                platform: 'Theatrical / Streaming',
-                audience: audience,
-                genres: genres,
-                summary: item.overview || '',
-                cover_url: cover,
-                trailerStatus: 'not_verified',
-                matchedFavorite: `Like: ${topFavNames || topGenreName}`,
-                userAdded: true
-              });
-              if (pendingTmdbBatch.length >= 100) break;
-            }
-            pageNum++;
-          }
-          localStorage.setItem(smartStorageKey, pageNum);
-
-          statusBox.innerHTML = `
-            <strong>Found ${pendingTmdbBatch.length} suggested titles!</strong><br>
-            ✨ Inspired by your ratings & favorites: <em>${topFavNames || topGenreName}</em>.<br>
-            <div style="margin-top:6px; font-size:0.75rem; color:var(--muted);">
-              Sample: ${pendingTmdbBatch.slice(0, 4).map(t => `${t.title} (${t.year})`).join(', ')}...
-            </div>
-          `;
-        } else {
-          // Standard by Year & Category
-          const year = parseInt(document.getElementById('importYear').value) || 2021;
-          const genreId = document.getElementById('importGenreSelect').value;
-          const storageKey = `tmdb_page_${year}_${genreId}_${fmt}_${lang}`;
-          let pageNum = parseInt(localStorage.getItem(storageKey)) || 1;
-          let loops = 0;
-
-          while (pendingTmdbBatch.length < 100 && loops < 12) {
-            loops++;
-            const endpoints = [];
-            if (fmt === 'both' || fmt === 'movie') {
-              let url = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&without_genres=${withoutStr}&primary_release_year=${year}&sort_by=popularity.desc&page=${pageNum}`;
-              if (genreId) url += `&with_genres=${genreId}`;
-              if (lang) url += `&with_original_language=${lang.slice(0,2)}`;
-              endpoints.push({ type: 'Movie', url });
-            }
-            if (fmt === 'both' || fmt === 'tv') {
-              let url = `https://api.themoviedb.org/3/discover/tv?api_key=${apiKey}&without_genres=${withoutStr}&first_air_date_year=${year}&sort_by=popularity.desc&page=${pageNum}`;
-              if (genreId) url += `&with_genres=${genreId}`;
-              if (lang) url += `&with_original_language=${lang.slice(0,2)}`;
-              endpoints.push({ type: 'TV', url });
-            }
-
-            let results = [];
-            for (let ep of endpoints) {
-              const res = await fetch(ep.url);
-              const data = await res.json();
-              if (data.results && data.results.length) results.push(...data.results.map(r => ({ ...r, _format: ep.type })));
-            }
-            if (results.length === 0) break;
-
-            for (let item of results) {
-              const gIds = item.genre_ids || [];
-              if (gIds.includes(27)) continue;
-              const genres = gIds.map(id => GENRE_MAP[id]).filter(Boolean);
-              if (genres.some(g => excludedSet.has(g))) continue;
-
-              const title = item.title || item.name;
-              const releaseDate = item.release_date || item.first_air_date || '';
-              const itemYear = parseInt(releaseDate.slice(0, 4)) || year;
-
-              if (existingTitles.has(`${title.toLowerCase()}_${itemYear}`)) { duplicatesCount++; continue; }
-              existingTitles.add(`${title.toLowerCase()}_${itemYear}`);
-              
-              const cover = item.poster_path ? `https://image.tmdb.org/t/p/w300_and_h450_face${item.poster_path}` : '';
-              let audience = 'Adults';
-              if (genres.includes('Family') || genres.includes('Kids')) audience = 'Family';
-              else if (item.vote_average >= 7.0 && !genres.includes('Crime')) audience = 'Teens+';
-
-              pendingTmdbBatch.push({
-                id: 3000 + (catalog.length + householdData.userTitles.length + pendingTmdbBatch.length),
-                title: title,
-                year: itemYear,
-                format: item._format,
-                platform: 'Theatrical / Streaming',
-                audience: audience,
-                genres: genres,
-                summary: item.overview || '',
-                cover_url: cover,
-                trailerStatus: 'not_verified',
-                userAdded: true
-              });
-              if (pendingTmdbBatch.length >= 100) break;
-            }
-            pageNum++;
-          }
-          localStorage.setItem(storageKey, pageNum);
-
-          statusBox.innerHTML = `
-            <strong>Found ${pendingTmdbBatch.length} new titles</strong> for ${year} (${duplicatesCount} duplicates skipped).<br>
-            <div style="margin-top:6px; font-size:0.75rem; color:var(--muted);">
-              Sample: ${pendingTmdbBatch.slice(0, 4).map(t => `${t.title} (${t.year})`).join(', ')}...
-            </div>
-          `;
-        }
-
-        if (pendingTmdbBatch.length > 0) {
-          document.getElementById('commitTmdbBatchBtn').classList.remove('hidden');
-        }
-      } catch (err) {
-        statusBox.innerHTML = `<span style="color:#c00;">Failed: ${err.message}</span>`;
-      }
-    };
-
-    document.getElementById('commitTmdbBatchBtn').onclick = () => {
-      if (pendingTmdbBatch.length === 0) return;
-      householdData.userTitles.push(...pendingTmdbBatch);
-      pushHouseholdSync();
-      renderNavTabs();
-      renderFeed();
-      alert(`Added ${pendingTmdbBatch.length} new titles to your catalog!`);
-      pendingTmdbBatch = [];
-      document.getElementById('commitTmdbBatchBtn').classList.add('hidden');
-      hideAllModals();
-    };
-
-    // --- 13. Dock Navigation ---
+    // --- 11. Dock Listeners ---
     document.getElementById('dockDiscover').onclick = () => hideAllModals();
     document.getElementById('dockImport').onclick = () => {
       hideAllModals();
@@ -1398,6 +1063,127 @@
       a.setAttribute("href", dataStr);
       a.setAttribute("download", `watchlist-backup-${new Date().toISOString().slice(0,10)}.json`);
       a.click();
+    };
+
+    // Genre Filter Modal Handlers
+    function updateExcludedBadge() {
+      const count = (householdData.excludedGenres || []).length;
+      document.getElementById('excludeCountBadge').textContent = count;
+    }
+    function openGenreModal() {
+      hideAllModals();
+      const container = document.getElementById('genreCheckboxList');
+      const excluded = new Set(householdData.excludedGenres || []);
+      container.innerHTML = ALL_AVAILABLE_GENRES.map(g => `
+        <label class="genre-pill">
+          <input type="checkbox" value="${g}" ${excluded.has(g) ? 'checked' : ''}>
+          <span>${g}</span>
+        </label>
+      `).join('');
+      document.getElementById('genreModal').classList.remove('hidden');
+    }
+    document.getElementById('saveExcludedGenresBtn').onclick = () => {
+      const checked = [];
+      document.querySelectorAll('#genreCheckboxList input:checked').forEach(cb => checked.push(cb.value));
+      householdData.excludedGenres = checked;
+      pushHouseholdSync();
+      updateExcludedBadge();
+      page = 1;
+      renderFeed();
+      hideAllModals();
+    };
+    document.getElementById('resetExcludedGenresBtn').onclick = () => {
+      householdData.excludedGenres = [];
+      pushHouseholdSync();
+      updateExcludedBadge();
+      page = 1;
+      renderFeed();
+      hideAllModals();
+    };
+    document.getElementById('openGenreFilterBtn').onclick = openGenreModal;
+
+    // Folder Management
+    function openCategoriesModal() {
+      hideAllModals();
+      const listContainer = document.getElementById('categoryManageList');
+      const cats = householdData.categories || DEFAULT_CATEGORIES;
+      listContainer.innerHTML = cats.map(c => `
+        <div class="category-manage-item">
+          <input type="text" value="${c.label}" id="cat-rename-${c.key}" style="flex:1; padding:6px 8px; font-size:0.8rem;">
+          <button class="btn btn-outline" style="padding:4px 8px; font-size:0.75rem;" onclick="renameCategory('${c.key}')">Rename</button>
+          <button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="deleteCategory('${c.key}')">✕</button>
+        </div>
+      `).join('');
+      document.getElementById('categoriesModal').classList.remove('hidden');
+    }
+    window.renameCategory = function(key) {
+      const input = document.getElementById(`cat-rename-${key}`);
+      const newLabel = input.value.trim();
+      if (!newLabel) return;
+      const cat = householdData.categories.find(c => c.key === key);
+      if (cat) {
+        cat.label = newLabel;
+        pushHouseholdSync();
+        renderNavTabs();
+        renderFeed();
+      }
+    };
+    window.deleteCategory = function(key) {
+      const cat = householdData.categories.find(c => c.key === key);
+      const name = cat ? cat.label : key;
+      if (!confirm(`Delete folder "${name}"? Titles in this folder will safely return to Inbox.`)) return;
+      householdData.categories = householdData.categories.filter(c => c.key !== key);
+      for (let id in householdData.lists) {
+        if (householdData.lists[id] === key) delete householdData.lists[id];
+      }
+      if (currentFilter === key) currentFilter = 'uncategorized';
+      pushHouseholdSync();
+      renderNavTabs();
+      renderFeed();
+      openCategoriesModal();
+    };
+    document.getElementById('addCategoryBtn').onclick = () => {
+      const input = document.getElementById('newCategoryInput');
+      const name = input.value.trim();
+      if (!name) return;
+      const key = 'cat_' + Date.now();
+      householdData.categories.push({ key, label: name });
+      input.value = '';
+      pushHouseholdSync();
+      renderNavTabs();
+      renderFeed();
+      openCategoriesModal();
+    };
+
+    // Tonight's Pick & Share
+    document.getElementById('pickRandomBtn').onclick = () => {
+      const eligible = getFilteredTitles();
+      if (eligible.length === 0) { alert("No titles in this view!"); return; }
+      showRoulette(eligible[Math.floor(Math.random() * eligible.length)]);
+    };
+    function showRoulette(item) {
+      hideAllModals();
+      const content = document.getElementById('rouletteContent');
+      content.innerHTML = `
+        <div style="font-weight:700; font-size:1.15rem; color:var(--green-dark);">${item.title} (${item.year})</div>
+        <div style="font-size:0.8rem; color:var(--muted); margin:4px 0;">${item.format} • ${(item.genres||[]).join(', ')}</div>
+        <img src="${item.cover_url||''}" style="width:120px; height:180px; object-fit:cover; border-radius:8px; margin:8px auto; display:block;" onerror="this.style.display='none'">
+        <p style="font-size:0.82rem; color:var(--text); text-align:left; margin-top:6px;">${item.summary||''}</p>
+      `;
+      document.getElementById('rouletteModal').classList.remove('hidden');
+    }
+    document.getElementById('rerollBtn').onclick = () => {
+      const eligible = getFilteredTitles();
+      if (eligible.length > 0) showRoulette(eligible[Math.floor(Math.random() * eligible.length)]);
+    };
+    document.getElementById('closeRouletteBtn').onclick = hideAllModals;
+
+    document.getElementById('shareListBtn').onclick = () => {
+      const eligible = getFilteredTitles();
+      if (eligible.length === 0) { alert("Current list is empty!"); return; }
+      const text = `🎬 *Our Watchlist (${currentFilter.toUpperCase()})*:\n` + eligible.slice(0, 30).map(i => `• ${i.title} (${i.year})`).join('\n') + (eligible.length > 30 ? `\n...and ${eligible.length - 30} more!` : '');
+      navigator.clipboard.writeText(text);
+      alert(`Copied ${eligible.length} titles to clipboard!`);
     };
 
     loadCatalog();
