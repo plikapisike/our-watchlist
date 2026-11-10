@@ -668,14 +668,18 @@
         } catch(e) {}
       }
 
-      // Deduplicate by ID
-      const seenIds = new Set();
-      catalog = catalog.filter(item => {
-        if (seenIds.has(item.id)) return false;
-        seenIds.add(item.id);
-        return true;
-      });
-
+      // Deduplicate by Title + Year AND by ID
+  const seenKeys = new Set();
+  const seenIds = new Set();
+  catalog = catalog.filter(item => {
+    if (!item || !item.title) return false;
+    const titleKey = `${item.title.trim().toLowerCase()}_${item.year}`;
+    if (seenKeys.has(titleKey) || seenIds.has(item.id)) return false;
+    seenKeys.add(titleKey);
+    seenIds.add(item.id);
+    return true;
+  });
+      
       updateExcludedBadge();
       renderNavTabs();
       renderFeed();
