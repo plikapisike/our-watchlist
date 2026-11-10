@@ -38,6 +38,7 @@
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); padding-bottom: 90px; }
     header { background: var(--green-dark); color: #FAF7F2; padding: 12px 16px; position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
     header h1 { font-size: 1.15rem; font-weight: 700; }
+    .header-actions { display: flex; align-items: center; gap: 8px; }
     .status-pill { font-size: 0.72rem; padding: 3px 8px; border-radius: 12px; background: rgba(255,255,255,0.15); display: flex; align-items: center; gap: 5px; }
     .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #95D5B2; }
     .status-dot.error { background: #FF6B6B; }
@@ -50,19 +51,21 @@
     .search-box { padding: 10px 16px; display: flex; flex-direction: column; gap: 8px; }
     .input-row { display: flex; gap: 6px; }
     input, select, textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: #FFFFFF; font-size: 0.88rem; color: var(--text); }
-    .btn { background: var(--green-primary); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 600; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+    .btn { background: var(--green-primary); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 600; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 5px; text-decoration: none; }
     .btn-secondary { background: var(--badge); color: var(--text); }
     .btn-outline { background: transparent; border: 1px solid var(--green-primary); color: var(--green-primary); }
 
     .catalog-grid { display: flex; flex-direction: column; gap: 12px; padding: 6px 16px; }
     .card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); padding: 12px; display: flex; gap: 12px; box-shadow: var(--shadow); position: relative; }
-    .cover-thumb-wrap { width: 85px; min-width: 85px; height: 128px; border-radius: 8px; overflow: hidden; background: var(--badge); cursor: pointer; }
+    .cover-thumb-wrap { width: 90px; min-width: 90px; height: 135px; border-radius: 8px; overflow: hidden; background: var(--badge); cursor: pointer; flex-shrink: 0; }
     .cover-thumb { width: 100%; height: 100%; object-fit: cover; }
     .card-body { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-    .card-title { font-size: 0.98rem; font-weight: 700; color: var(--green-dark); line-height: 1.2; }
+    .card-title { font-size: 1rem; font-weight: 700; color: var(--green-dark); line-height: 1.25; }
     .card-meta { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
-    .card-cast { font-size: 0.75rem; color: var(--muted); margin: 3px 0 2px 0; line-height: 1.3; }
-    .card-summary { font-size: 0.8rem; color: var(--text); margin: 6px 0; line-height: 1.4; }
+    .card-cast { font-size: 0.76rem; color: var(--muted); margin: 3px 0 2px 0; line-height: 1.35; }
+    
+    /* Generous, comfortable full plot summaries */
+    .card-summary { font-size: 0.82rem; color: #2D3748; margin: 6px 0; line-height: 1.48; word-break: break-word; }
 
     .badge-bar { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0; }
     .badge { font-size: 0.68rem; padding: 2px 6px; border-radius: 4px; background: var(--badge); color: var(--text); }
@@ -100,9 +103,12 @@
       <h1>Our Watchlist</h1>
       <div id="householdDisplay" style="font-size:0.72rem; color:#D8F3DC;">Connecting...</div>
     </div>
-    <div class="status-pill">
-      <div id="syncDot" class="status-dot"></div>
-      <span id="syncText">Saved</span>
+    <div class="header-actions">
+      <button class="btn btn-outline" id="shareListBtn" style="color:#FAF7F2; border-color:rgba(255,255,255,0.4); padding:4px 8px; font-size:0.75rem;">📤 Share</button>
+      <div class="status-pill">
+        <div id="syncDot" class="status-dot"></div>
+        <span id="syncText">Saved</span>
+      </div>
     </div>
   </header>
 
@@ -158,22 +164,30 @@
       <p id="modalYearFormat" style="font-size:0.82rem; color:var(--muted);"></p>
       <div id="modalCast" style="font-size:0.78rem; color:var(--muted);"></div>
       <img id="modalImg" class="modal-img" alt="Enlarged cover">
-      <p id="modalSummary" style="font-size:0.82rem; color:var(--text); line-height:1.4;"></p>
-      <div id="modalTrailerContainer"></div>
+      <div style="background:#FAF7F2; padding:10px; border-radius:8px; border:1px solid var(--border);">
+        <strong style="font-size:0.78rem; color:var(--green-dark);">Full Plot Summary:</strong>
+        <p id="modalSummary" style="font-size:0.84rem; color:#2D3748; line-height:1.5; margin-top:4px;"></p>
+      </div>
+      <div style="display:flex; gap:6px;">
+        <a id="findPosterBtn" href="#" target="_blank" class="btn btn-secondary" style="flex:1;">🔍 Search Cover Art</a>
+        <div id="modalTrailerContainer" style="flex:1;"></div>
+      </div>
       <button class="btn btn-secondary" id="modalCloseBtn">Close</button>
     </div>
   </div>
 
-  <!-- Manage Categories Modal -->
+  <!-- Manage Categories Modal (With Rename & Add) -->
   <div id="categoriesModal" class="modal-backdrop hidden">
     <div class="modal-box">
       <h3 style="color:var(--green-dark);">Manage List Categories</h3>
+      <p style="font-size:0.78rem; color:var(--muted);">Rename or remove any list. Renaming keeps all your assigned movies intact!</p>
       <div id="categoriesList" style="display:flex; flex-direction:column; gap:8px;"></div>
-      <div style="border-top:1px solid var(--border); padding-top:10px; margin-top:10px;">
-        <h4 style="font-size:0.85rem; margin-bottom:4px;">Create New List Category</h4>
+      
+      <div style="border-top:1px solid var(--border); padding-top:12px; margin-top:10px;">
+        <h4 style="font-size:0.85rem; margin-bottom:4px;">Add New List Category</h4>
         <div style="display:flex; gap:6px;">
-          <input type="text" id="newCategoryInput" placeholder="e.g. Weekend Binge">
-          <button class="btn" id="addCategoryBtn">Create</button>
+          <input type="text" id="newCategoryInput" placeholder="e.g. Weekend Binge or Documentary">
+          <button class="btn" id="addCategoryBtn">Add</button>
         </div>
       </div>
       <button class="btn btn-secondary" id="closeCategoriesModal">Close</button>
@@ -195,20 +209,30 @@
     </div>
   </div>
 
-  <!-- Settings Modal -->
+  <!-- Settings Modal (Export & Import Backups) -->
   <div id="settingsModal" class="modal-backdrop hidden">
     <div class="modal-box">
-      <h3>Settings</h3>
-      <div>
+      <h3>Settings & Backup Recovery</h3>
+      
+      <div style="background:#EDF7EE; border:1px solid #C7E6C9; padding:12px; border-radius:8px;">
+        <h4 style="font-size:0.85rem; color:var(--green-dark); margin-bottom:4px;">📥 Restore Lists From Backup</h4>
+        <p style="font-size:0.75rem; color:var(--muted); margin-bottom:8px;">Import a previously saved backup file to restore all your lists, ratings, and notes instantly:</p>
+        <input type="file" id="importBackupFile" accept=".json" style="font-size:0.78rem; padding:4px;">
+      </div>
+
+      <div style="background:#FAF7F2; border:1px solid var(--border); padding:12px; border-radius:8px; margin-top:8px;">
+        <h4 style="font-size:0.85rem; color:var(--green-dark); margin-bottom:4px;">💾 Save List Backup to Computer</h4>
+        <p style="font-size:0.75rem; color:var(--muted); margin-bottom:8px;">Downloads a copy of all your saved choices, categories, favorites, and notes:</p>
+        <button class="btn btn-outline" id="exportBackupBtn" style="width:100%;">⬇️ Download Backup File (.json)</button>
+      </div>
+
+      <div style="border-top:1px solid var(--border); padding-top:10px; margin-top:10px;">
         <h4 style="font-size:0.85rem;">Cloud Storage (Firebase)</h4>
         <p style="font-size:0.75rem; color:var(--muted); margin-bottom:4px;">Paste your Firebase Config:</p>
-        <textarea id="firebaseConfigInput" rows="4" placeholder='{"apiKey": "...", "projectId": "..."}'></textarea>
+        <textarea id="firebaseConfigInput" rows="3" placeholder='{"apiKey": "...", "projectId": "..."}'></textarea>
         <button class="btn" id="saveConfigBtn" style="margin-top:6px; width:100%;">Save Cloud Config</button>
       </div>
-      <div style="border-top:1px solid var(--border); padding-top:10px; margin-top:10px;">
-        <h4 style="font-size:0.85rem;">Export Backup</h4>
-        <button class="btn btn-secondary" id="exportBackupBtn" style="width:100%;">Download JSON Backup</button>
-      </div>
+
       <button class="btn btn-secondary" id="closeSettingsModal" style="margin-top:10px;">Close</button>
     </div>
   </div>
@@ -233,16 +257,21 @@
     };
 
     let activeHousehold = localStorage.getItem('ow_household_user') || '';
-    // Remember active tab or default to 'all' so movies don't look missing!
     let currentFilter = localStorage.getItem('ow_active_tab') || 'all';
     let pageSize = 25;
     let page = 1;
     let db = null;
 
-    // Helper: Build stable title key that NEVER changes even if ID changes
+    // Stable title identifier that never changes even if IDs are renumbered
     function getItemKey(item) {
       if (!item) return '';
       return `${(item.title || '').trim().toLowerCase()}_${item.year}`;
+    }
+
+    // Dynamic handsome poster fallback for any movie missing cover art
+    function getPosterFallback(title, year) {
+      const clean = (title || 'Movie').replace(/[<>&"]/g, '');
+      return `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="450" viewBox="0 0 300 450"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%231B4332"/><stop offset="100%" stop-color="%232D6A4F"/></linearGradient></defs><rect width="300" height="450" fill="url(%23g)" rx="8"/><text x="150" y="200" fill="%23FAF7F2" font-family="system-ui,sans-serif" font-size="20" font-weight="bold" text-anchor="middle">${clean.slice(0, 22)}</text><text x="150" y="235" fill="%2395D5B2" font-family="system-ui,sans-serif" font-size="14" text-anchor="middle">${year || ''}</text><text x="150" y="280" font-size="30" text-anchor="middle">🎬</text></svg>`;
     }
 
     // --- 1. LOAD LOCAL DATA IMMEDIATELY ---
@@ -284,7 +313,7 @@
           const cloudListsCount = Object.keys(cloud.lists || {}).length;
           const localListsCount = Object.keys(householdData.lists || {}).length;
 
-          // SAFE MERGE: Never allow an empty cloud document to wipe populated local data!
+          // Never let an empty cloud document overwrite populated local choices
           if (cloudListsCount > 0) {
             householdData.lists = { ...householdData.lists, ...cloud.lists };
             householdData.notes = { ...householdData.notes, ...(cloud.notes || {}) };
@@ -296,7 +325,6 @@
             renderNavTabs();
             renderFeed();
           } else if (localListsCount > 0) {
-            // Local has saved choices but cloud is blank -> push local data up to cloud!
             syncHouseholdChange();
           }
         }
@@ -304,12 +332,10 @@
     }
 
     async function syncHouseholdChange() {
-      // 1. Save to local storage synchronously first
       localStorage.setItem('ow_local_data', JSON.stringify(householdData));
       document.getElementById('syncText').textContent = 'Saved';
       document.getElementById('syncDot').classList.remove('error');
 
-      // 2. Sync to Firestore if connected
       if (db && activeHousehold) {
         try {
           const hhDocRef = window.FB.doc(db, "households", activeHousehold);
@@ -353,7 +379,6 @@
       renderFeed();
     }
 
-    // Get assigned list using BOTH titleKey and ID so catalog re-ordering never loses data
     function getAssignedList(item) {
       const key = getItemKey(item);
       return householdData.lists[key] || householdData.lists[item.id] || 'uncategorized';
@@ -391,7 +416,7 @@
           container.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
           tab.classList.add('active');
           currentFilter = tab.getAttribute('data-list');
-          localStorage.setItem('ow_active_tab', currentFilter); // Remember tab across reloads!
+          localStorage.setItem('ow_active_tab', currentFilter);
           page = 1;
           renderFeed();
         };
@@ -478,10 +503,13 @@
         stars += `<span class="star ${i <= rating ? 'filled' : ''}" onclick="window.setRating(${item.id}, ${i === rating ? 0 : i})">★</span>`;
       }
 
+      const fallbackUrl = getPosterFallback(item.title, item.year);
+      const coverSrc = item.cover_url || fallbackUrl;
+
       return `
         <article class="card">
           <div class="cover-thumb-wrap" onclick="window.openModal(${item.id})">
-            <img class="cover-thumb" src="${item.cover_url||''}" alt="${item.title}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2285%22 height=%22128%22><rect fill=%22%23eee%22 width=%22100%25%22 height=%22100%25%22/><text x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2210%22 fill=%22%23888%22>No Cover</text></svg>'">
+            <img class="cover-thumb" src="${coverSrc}" alt="${item.title}" loading="lazy" onerror="this.onerror=null; this.src='${fallbackUrl}';">
           </div>
           <div class="card-body">
             <div>
@@ -495,7 +523,8 @@
                 ${(item.genres||[]).map(g => `<span class="badge">${g}</span>`).join('')}
               </div>
 
-              <p class="card-summary">${item.summary||''}</p>
+              <!-- Full plot summary with generous line-height -->
+              <p class="card-summary">${item.summary || 'No summary available.'}</p>
             </div>
 
             <div class="curation-bar">
@@ -528,7 +557,7 @@
         if (titleKey) delete householdData.lists[titleKey];
       } else {
         householdData.lists[id] = listKey;
-        if (titleKey) householdData.lists[titleKey] = listKey; // Lock to Title+Year
+        if (titleKey) householdData.lists[titleKey] = listKey;
       }
 
       syncHouseholdChange();
@@ -590,8 +619,20 @@
       
       const castText = formatCast(item.cast);
       document.getElementById('modalCast').innerHTML = castText ? `👥 <strong>Cast:</strong> ${castText}` : '';
-      document.getElementById('modalSummary').textContent = item.summary || '';
-      document.getElementById('modalImg').src = item.cover_url || '';
+      document.getElementById('modalSummary').textContent = item.summary || 'No summary available.';
+
+      const fallbackUrl = getPosterFallback(item.title, item.year);
+      const img = document.getElementById('modalImg');
+      img.src = item.cover_url || fallbackUrl;
+      img.onerror = () => { img.src = fallbackUrl; };
+
+      // Direct search link for high-res artwork if missing
+      document.getElementById('findPosterBtn').href = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(item.title + ' ' + item.year + ' movie poster')}`;
+
+      const trailerBox = document.getElementById('modalTrailerContainer');
+      const trailerSearch = `https://www.youtube.com/results?search_query=${encodeURIComponent(item.title + ' ' + item.year + ' trailer')}`;
+      trailerBox.innerHTML = `<a href="${trailerSearch}" target="_blank" class="btn btn-secondary" style="width:100%;">▶ Trailer</a>`;
+
       document.getElementById('coverModal').classList.remove('hidden');
     };
     document.getElementById('modalCloseBtn').onclick = () => document.getElementById('coverModal').classList.add('hidden');
@@ -617,18 +658,34 @@
     document.getElementById('closeHouseholdModal').onclick = hideAllModals;
     document.getElementById('closeSettingsModal').onclick = hideAllModals;
 
-    // Categories Manager
+    // --- 8. CATEGORIES MANAGER (RENAME & DELETE & ADD) ---
     function renderCategoriesManager() {
       const box = document.getElementById('categoriesList');
       box.innerHTML = householdData.categories.map((c, i) => `
-        <div style="display:flex; justify-content:space-between; align-items:center; background:#FAF7F2; padding:6px 10px; border-radius:6px;">
-          <span>${c.label}</span>
-          <button onclick="window.deleteCategory(${i})" style="border:none; background:transparent; color:#c00; font-weight:bold; cursor:pointer;">Delete</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; background:#FAF7F2; padding:8px 10px; border-radius:8px; border:1px solid var(--border);">
+          <span style="font-weight:600; font-size:0.85rem;">${c.label}</span>
+          <div style="display:flex; gap:6px;">
+            <button onclick="window.renameCategory(${i})" class="btn btn-outline" style="padding:4px 8px; font-size:0.75rem;">✏️ Rename</button>
+            <button onclick="window.deleteCategory(${i})" style="border:none; background:transparent; color:#c00; font-weight:bold; font-size:0.85rem; cursor:pointer;">🗑️</button>
+          </div>
         </div>
       `).join('');
     }
+
+    window.renameCategory = function(index) {
+      const current = householdData.categories[index].label;
+      const updated = prompt(`Enter new name for "${current}":`, current);
+      if (updated && updated.trim() && updated.trim() !== current) {
+        householdData.categories[index].label = updated.trim();
+        syncHouseholdChange();
+        renderCategoriesManager();
+        renderNavTabs();
+        renderFeed();
+      }
+    };
+
     window.deleteCategory = function(index) {
-      if (confirm(`Delete "${householdData.categories[index].label}"?`)) {
+      if (confirm(`Delete the "${householdData.categories[index].label}" category?`)) {
         householdData.categories.splice(index, 1);
         syncHouseholdChange();
         renderCategoriesManager();
@@ -636,6 +693,7 @@
         renderFeed();
       }
     };
+
     document.getElementById('addCategoryBtn').onclick = () => {
       const label = document.getElementById('newCategoryInput').value.trim();
       if (!label) return;
@@ -648,7 +706,85 @@
       renderFeed();
     };
 
-    // Household Login (Username & Password)
+    // --- 9. SHARE LISTS BUTTON ---
+    document.getElementById('shareListBtn').onclick = async () => {
+      let listTitle = "Our Watchlist";
+      const cat = householdData.categories.find(c => c.key === currentFilter);
+      if (cat) listTitle = cat.label;
+      else if (currentFilter === 'favorites') listTitle = "Favorites";
+      else if (currentFilter === 'good') listTitle = "Good Recommendations";
+
+      const matchedTitles = catalog.filter(item => {
+        const assigned = getAssignedList(item);
+        const key = getItemKey(item);
+        if (currentFilter === 'all') return true;
+        if (currentFilter === 'favorites') return (householdData.favorites[key] || householdData.favorites[item.id]);
+        if (currentFilter === 'good') return (householdData.good[key] || householdData.good[item.id]);
+        return assigned === currentFilter;
+      }).map(t => `- ${t.title} (${t.year})`).slice(0, 50);
+
+      const shareText = `🍿 ${listTitle} (${matchedTitles.length} titles):\n\n${matchedTitles.join('\n')}\n\nView our catalog: https://plikapisike.github.io/our-watchlist/`;
+
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: listTitle, text: shareText });
+        } catch(e) {}
+      } else {
+        navigator.clipboard.writeText(shareText).then(() => {
+          alert(`Copied "${listTitle}" to clipboard! You can paste it into a text message or email.`);
+        });
+      }
+    };
+
+    // --- 10. BACKUP EXPORT & IMPORT ---
+    document.getElementById('exportBackupBtn').onclick = () => {
+      const backupData = {
+        app: "Our Watchlist",
+        version: 2,
+        exportedAt: new Date().toISOString(),
+        household: activeHousehold,
+        data: householdData
+      };
+      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `watchlist_backup_${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+    };
+
+    document.getElementById('importBackupFile').onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (evt) => {
+        try {
+          const imported = JSON.parse(evt.target.result);
+          const payload = imported.data || imported;
+          
+          if (!payload.lists && !payload.categories) {
+            throw new Error("Invalid backup file structure.");
+          }
+
+          if (payload.lists) Object.assign(householdData.lists, payload.lists);
+          if (payload.notes) Object.assign(householdData.notes, payload.notes);
+          if (payload.favorites) Object.assign(householdData.favorites, payload.favorites);
+          if (payload.good) Object.assign(householdData.good, payload.good);
+          if (payload.ratings) Object.assign(householdData.ratings, payload.ratings);
+          if (payload.categories) householdData.categories = payload.categories;
+
+          await syncHouseholdChange();
+          renderNavTabs();
+          renderFeed();
+          alert("🎉 Backup successfully restored! All your lists, notes, and favorites are back.");
+          hideAllModals();
+        } catch(err) {
+          alert("Could not import backup: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    };
+
+    // --- 11. HOUSEHOLD & AUTH ---
     document.getElementById('loginHouseholdBtn').onclick = () => {
       const u = document.getElementById('userHouseholdInput').value.trim();
       const p = document.getElementById('passHouseholdInput').value.trim();
@@ -662,7 +798,6 @@
       syncHouseholdChange();
     };
 
-    // Config Save
     document.getElementById('saveConfigBtn').onclick = () => {
       const raw = document.getElementById('firebaseConfigInput').value.trim();
       try {
@@ -671,15 +806,6 @@
         alert("Config saved! Reloading...");
         window.location.reload();
       } catch(e) { alert("Invalid JSON format"); }
-    };
-
-    // Backup Download
-    document.getElementById('exportBackupBtn').onclick = () => {
-      const blob = new Blob([JSON.stringify(householdData, null, 2)], { type: "application/json" });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `watchlist_backup_${Date.now()}.json`;
-      a.click();
     };
 
     // Boot
