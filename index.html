@@ -33,20 +33,23 @@
       --good-blue: #1D4ED8;
       --radius: 12px;
       --shadow: 0 4px 12px rgba(27, 67, 50, 0.08);
+      --active-theme-color: #2D6A4F;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); padding-bottom: 90px; }
-    header { background: var(--green-dark); color: #FAF7F2; padding: 12px 16px; position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+    
+    header { background: var(--green-dark); color: #FAF7F2; padding: 10px 16px; position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
     header h1 { font-size: 1.15rem; font-weight: 700; }
     .header-actions { display: flex; align-items: center; gap: 6px; }
-    .status-pill { font-size: 0.72rem; padding: 3px 8px; border-radius: 12px; background: rgba(255,255,255,0.15); display: flex; align-items: center; gap: 5px; }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #95D5B2; }
-    .status-dot.error { background: #FF6B6B; }
+
+    /* Profile Selector & Gamification Pill */
+    .profile-pill { background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 3px 8px; font-size: 0.74rem; color: #FAF7F2; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+    .score-badge { background: #D4AF37; color: #1B4332; font-weight: bold; border-radius: 10px; padding: 1px 5px; font-size: 0.68rem; }
 
     .nav-scroll { display: flex; gap: 6px; padding: 10px 16px; overflow-x: auto; background: #FFFFFF; border-bottom: 1px solid var(--border); white-space: nowrap; scrollbar-width: none; }
     .nav-scroll::-webkit-scrollbar { display: none; }
-    .nav-tab { background: var(--badge); border: 1px solid transparent; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; color: var(--muted); cursor: pointer; }
-    .nav-tab.active { background: var(--green-primary); color: #FFFFFF; }
+    .nav-tab { background: var(--badge); border: 1px solid transparent; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; color: var(--muted); cursor: pointer; transition: all 0.2s; }
+    .nav-tab.active { background: var(--active-theme-color); color: #FFFFFF; }
 
     .search-box { padding: 10px 16px; display: flex; flex-direction: column; gap: 8px; }
     .input-row { display: flex; gap: 6px; }
@@ -57,11 +60,11 @@
 
     .quick-tools-bar { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
     .quick-tools-bar::-webkit-scrollbar { display: none; }
-    .tool-chip { background: #FFFFFF; border: 1px solid var(--border); border-radius: 20px; padding: 5px 10px; font-size: 0.75rem; font-weight: 600; color: var(--green-dark); cursor: pointer; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .tool-chip { background: #FFFFFF; border: 1px solid var(--border); border-radius: 20px; padding: 5px 10px; font-size: 0.74rem; font-weight: 600; color: var(--green-dark); cursor: pointer; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
 
     .catalog-grid { display: flex; flex-direction: column; gap: 12px; padding: 6px 16px; }
     .card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); padding: 12px; display: flex; gap: 12px; box-shadow: var(--shadow); position: relative; }
-    .cover-thumb-wrap { width: 90px; min-width: 90px; height: 135px; border-radius: 8px; overflow: hidden; background: var(--badge); cursor: pointer; flex-shrink: 0; }
+    .cover-thumb-wrap { width: 92px; min-width: 92px; height: 138px; border-radius: 8px; overflow: hidden; background: var(--badge); cursor: pointer; flex-shrink: 0; }
     .cover-thumb { width: 100%; height: 100%; object-fit: cover; }
     .card-body { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
     .card-title { font-size: 1rem; font-weight: 700; color: var(--green-dark); line-height: 1.25; }
@@ -69,24 +72,27 @@
     .card-cast { font-size: 0.76rem; color: var(--muted); margin: 3px 0 2px 0; line-height: 1.35; }
     .card-summary { font-size: 0.82rem; color: #2D3748; margin: 6px 0; line-height: 1.48; word-break: break-word; }
 
-    .badge-bar { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0; }
+    /* Platform / Studio Badge */
+    .platform-badge { font-size: 0.7rem; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: #1B4332; color: #FAF7F2; display: inline-block; }
+
+    .badge-bar { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0; align-items: center; }
     .badge { font-size: 0.68rem; padding: 2px 6px; border-radius: 4px; background: var(--badge); color: var(--text); }
     .badge-green { background: var(--green-light); color: var(--green-dark); }
 
-    .curation-bar { display: flex; gap: 6px; margin: 6px 0; align-items: center; }
+    .curation-bar { display: flex; gap: 6px; margin: 6px 0; align-items: center; flex-wrap: wrap; }
     .curate-btn { border: 1px solid var(--border); background: var(--bg); border-radius: 16px; padding: 3px 8px; font-size: 0.72rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; }
     .curate-btn.active-fav { background: #FFF8E1; border-color: var(--fav-gold); color: #B78103; }
     .curate-btn.active-good { background: #EFF6FF; border-color: var(--good-blue); color: var(--good-blue); }
-    .star-rating { display: inline-flex; gap: 2px; margin-left: auto; cursor: pointer; }
+    .star-rating { display: inline-flex; gap: 2px; cursor: pointer; }
     .star { font-size: 1rem; color: #D1D5DB; }
     .star.filled { color: var(--fav-gold); }
 
     .list-picker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 8px; }
     .list-chip { background: var(--badge); border: 1px solid transparent; border-radius: 6px; padding: 6px 2px; font-size: 0.68rem; font-weight: 600; text-align: center; cursor: pointer; }
-    .list-chip.selected { background: var(--green-primary); color: #FFFFFF; font-weight: 700; }
 
-    .note-row { margin-top: 6px; display: flex; gap: 6px; }
+    .note-row { margin-top: 6px; display: flex; gap: 6px; align-items: center; }
     .note-input { font-size: 0.78rem; padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; }
+    .who-picked-btn { font-size: 0.7rem; padding: 4px 7px; border-radius: 6px; border: 1px dashed var(--border); background: #FAF7F2; cursor: pointer; white-space: nowrap; }
 
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; }
     .modal-box { background: #FFFFFF; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
@@ -96,21 +102,49 @@
     .dock-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: #FFFFFF; border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 90; }
     .dock-btn { display: flex; flex-direction: column; align-items: center; font-size: 0.72rem; color: var(--muted); border: none; background: transparent; cursor: pointer; }
     .dock-btn.active { color: var(--green-primary); font-weight: 700; }
+
+    /* --- KIDS COLORFUL UI MODE --- */
+    body.kids-mode { background-color: #FFFDF0; }
+    body.kids-mode header { background: #FF6B6B; }
+    body.kids-mode .card { border-radius: 20px; border: 3px solid #FFE66D; box-shadow: 0 6px 16px rgba(255, 107, 107, 0.15); }
+    body.kids-mode .card-title { font-size: 1.25rem; color: #4D96FF; }
+    body.kids-mode .cover-thumb-wrap { width: 110px; min-width: 110px; height: 165px; border-radius: 16px; }
+    body.kids-mode .curation-bar, body.kids-mode .note-row, body.kids-mode .card-cast { display: none; }
+    body.kids-mode .card-summary { font-size: 0.92rem; -webkit-line-clamp: 3; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+
+    /* Confetti Canvas */
+    #confettiCanvas { position: fixed; inset: 0; pointer-events: none; z-index: 999; }
+
+    /* --- PRINTABLE STYLESHEET (FOR FAMILY FRIDGE CHECKLIST) --- */
+    @media print {
+      body { background: white; color: black; padding: 0; }
+      header, .nav-scroll, .search-box, .dock-nav, #loadMoreContainer, .modal-backdrop, .curation-bar, .note-row, .list-picker-grid { display: none !important; }
+      .catalog-grid { display: block; padding: 0; }
+      .card { page-break-inside: avoid; border: 1px solid #ccc; box-shadow: none; margin-bottom: 8px; padding: 8px; display: flex; gap: 8px; }
+      .cover-thumb-wrap { width: 60px; min-width: 60px; height: 90px; }
+      .card-title::before { content: "☐  "; font-size: 1.1rem; }
+      .card-summary { font-size: 0.75rem; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+    }
   </style>
 </head>
 <body>
 
+  <canvas id="confettiCanvas"></canvas>
+
   <header>
     <div>
-      <h1>Our Watchlist</h1>
+      <h1 id="appTitle">Our Watchlist</h1>
       <div id="householdDisplay" style="font-size:0.72rem; color:#D8F3DC;">Connecting...</div>
     </div>
     <div class="header-actions">
+      <!-- Profile & Score Pill -->
+      <button class="profile-pill" id="profilePickerBtn">
+        <span id="currentProfileIcon">👤</span>
+        <span id="currentProfileName">Wife</span>
+        <span class="score-badge" id="profileScoreBadge">0 pts</span>
+      </button>
+      <button class="tool-chip" id="kidsModeToggleBtn" style="padding:4px 8px; font-size:0.72rem;">🎈 Kids Mode</button>
       <button class="btn btn-outline" id="shareListBtn" style="color:#FAF7F2; border-color:rgba(255,255,255,0.4); padding:4px 8px; font-size:0.75rem;">📤 Share</button>
-      <div class="status-pill">
-        <div id="syncDot" class="status-dot"></div>
-        <span id="syncText">Saved</span>
-      </div>
     </div>
   </header>
 
@@ -127,6 +161,12 @@
         <option value="title_asc">Title (A-Z)</option>
       </select>
     </div>
+
+    <!-- Seasonal & Themed Holiday Search -->
+    <div class="input-row">
+      <input type="search" id="holidaySearchInput" placeholder="🎄 Holiday / Theme (e.g. Christmas, Summer, Halloween)">
+      <button class="btn btn-outline" id="printListBtn" style="width:85px; font-size:0.75rem;">🖨️ Print</button>
+    </div>
     
     <div class="input-row">
       <select id="formatFilter" style="flex:1;">
@@ -136,9 +176,11 @@
       </select>
       <select id="collectionFilter" style="flex:1;">
         <option value="">All Collections</option>
-        <option value="dateNight">🍷 Date Night Picks</option>
+        <option value="dateNight">🍷 Date Night (Adults/Teens)</option>
+        <option value="kidsSmart">🍿 Kids & Family Picks</option>
         <option value="basedOnFavs">💡 Like My Favorites</option>
         <option value="basedOnGood">👍 Like My Good Movies</option>
+        <option value="under2Hours">⏱️ Under 2 Hours (Quick Watch)</option>
         <option value="favorites">❤️ Favorites</option>
         <option value="good">👍 Good Movies & Shows</option>
         <option value="high_rated">⭐ Rated 4+ Stars</option>
@@ -150,12 +192,13 @@
       </select>
     </div>
 
-    <!-- Quick Tools Bar -->
+    <!-- Prominent Quick Tools -->
     <div class="quick-tools-bar">
       <button class="tool-chip" id="openPickerBtn">🎲 <strong>Pick for Me</strong></button>
-      <button class="tool-chip" id="openExpandBtn">📥 <strong>Expand Database</strong></button>
       <button class="tool-chip" id="pullFresh20Btn">🔥 <strong>Fresh 20 (Last 6 Mos)</strong></button>
-      <button class="tool-chip" id="quickDateNightBtn">🍷 <strong>Date Night</strong></button>
+      <button class="tool-chip" id="openExpandBtn">📥 <strong>Expand Database</strong></button>
+      <button class="tool-chip" id="openBadgesBtn">🎖️ <strong>Sticker Badges</strong></button>
+      <button class="tool-chip" id="openScoreboardBtn">🏆 <strong>Scoreboard</strong></button>
     </div>
   </section>
 
@@ -183,36 +226,36 @@
         <p id="modalSummary" style="font-size:0.84rem; color:#2D3748; line-height:1.5; margin-top:4px;"></p>
       </div>
       <div style="display:flex; gap:6px;">
-        <a id="findPosterBtn" href="#" target="_blank" class="btn btn-secondary" style="flex:1;">🔍 Search Cover Art</a>
+        <a id="findPosterBtn" href="#" target="_blank" class="btn btn-secondary" style="flex:1;">🔍 Find Poster</a>
         <div id="modalTrailerContainer" style="flex:1;"></div>
       </div>
       <button class="btn btn-secondary" id="modalCloseBtn">Close</button>
     </div>
   </div>
 
-  <!-- Smart Pick & Surprise Me Modal -->
+  <!-- Smart Pick & Roulette Modal -->
   <div id="pickerModal" class="modal-backdrop hidden">
     <div class="modal-box">
-      <h3 style="color:var(--green-dark);">🎲 Smart Picker & Recommendations</h3>
-      <p style="font-size:0.78rem; color:var(--muted);">Select a mood or let the algorithm suggest what to watch next:</p>
+      <h3 style="color:var(--green-dark);">🎲 Pick for Me / Surprise Me</h3>
+      <p style="font-size:0.78rem; color:var(--muted);">Only suggests movies you haven't seen yet:</p>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:10px;">
-        <button class="btn btn-secondary" onclick="window.spinPicker('random')">🎲 Surprise Me</button>
+        <button class="btn btn-secondary" onclick="window.spinPicker('random')">🎲 Pure Surprise</button>
         <button class="btn btn-secondary" onclick="window.spinPicker('dateNight')">🍷 Date Night</button>
+        <button class="btn btn-secondary" onclick="window.spinPicker('family')">🍿 Family Movie Night</button>
         <button class="btn btn-secondary" onclick="window.spinPicker('favorites')">💡 Like Favorites</button>
-        <button class="btn btn-secondary" onclick="window.spinPicker('good')">👍 Like Good List</button>
       </div>
 
       <div id="pickerResultCard" style="display:none; background:#FAF7F2; border:1px solid var(--border); border-radius:10px; padding:12px;">
         <div style="display:flex; gap:10px;">
-          <img id="pickerImg" style="width:70px; height:105px; object-fit:cover; border-radius:6px;" alt="Cover">
+          <img id="pickerImg" style="width:75px; height:110px; object-fit:cover; border-radius:6px;" alt="Cover">
           <div>
             <h4 id="pickerTitle" style="color:var(--green-dark); font-size:0.95rem;"></h4>
             <div id="pickerMeta" style="font-size:0.74rem; color:var(--muted); margin-top:2px;"></div>
             <div id="pickerReason" style="font-size:0.75rem; background:var(--green-light); color:var(--green-dark); padding:2px 6px; border-radius:4px; display:inline-block; margin-top:4px; font-weight:600;"></div>
           </div>
         </div>
-        <p id="pickerSummary" style="font-size:0.78rem; color:#2D3748; margin-top:8px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;"></p>
+        <p id="pickerSummary" style="font-size:0.78rem; color:#2D3748; margin-top:8px; line-height:1.4;"></p>
         <div style="display:flex; gap:6px; margin-top:10px;">
           <button class="btn" id="pickerOpenBtn" style="flex:1;">View Details 🎬</button>
           <button class="btn btn-outline" id="pickerSpinAgainBtn" style="flex:1;">Spin Again 🔄</button>
@@ -223,12 +266,58 @@
     </div>
   </div>
 
+  <!-- Sticker Badges Modal -->
+  <div id="badgesModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <h3 style="color:var(--green-dark);">🎖️ Completed Movie Sticker Badges</h3>
+      <p style="font-size:0.78rem; color:var(--muted);">Unlock badges as you complete movies in your Watchlist!</p>
+      <div id="badgesContainer" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0;"></div>
+      <button class="btn btn-secondary" id="closeBadgesBtn">Close</button>
+    </div>
+  </div>
+
+  <!-- Scoreboard & Streaks Modal -->
+  <div id="scoreboardModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <h3 style="color:var(--green-dark);">🏆 Family Watch Streak & Scoreboard</h3>
+      <p style="font-size:0.78rem; color:var(--muted);">Earn points by watching, rating, and adding titles!</p>
+      
+      <div style="background:#FAF7F2; padding:12px; border-radius:8px; border:1px solid var(--border); margin:8px 0;">
+        <h4 style="font-size:0.85rem; color:var(--green-dark); margin-bottom:6px;">🔥 Watch Streaks</h4>
+        <div id="streaksDisplay" style="font-size:0.82rem; line-height:1.6;"></div>
+      </div>
+
+      <div style="background:#FAF7F2; padding:12px; border-radius:8px; border:1px solid var(--border);">
+        <h4 style="font-size:0.85rem; color:var(--green-dark); margin-bottom:6px;">🥇 Leaderboard</h4>
+        <div id="scoresDisplay" style="font-size:0.82rem; line-height:1.6;"></div>
+      </div>
+
+      <button class="btn btn-secondary" id="closeScoreboardBtn" style="margin-top:10px;">Close</button>
+    </div>
+  </div>
+
+  <!-- Categories Modal (With Color Theming & Rename) -->
+  <div id="categoriesModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <h3 style="color:var(--green-dark);">Manage Categories & Colors</h3>
+      <p style="font-size:0.78rem; color:var(--muted);">Assign custom colors to each list. Changes apply across your entire app!</p>
+      <div id="categoriesList" style="display:flex; flex-direction:column; gap:8px;"></div>
+      
+      <div style="border-top:1px solid var(--border); padding-top:12px; margin-top:10px;">
+        <h4 style="font-size:0.85rem; margin-bottom:4px;">Add New List Category</h4>
+        <div style="display:flex; gap:6px;">
+          <input type="text" id="newCategoryInput" placeholder="Category name...">
+          <button class="btn" id="addCategoryBtn">Add</button>
+        </div>
+      </div>
+      <button class="btn btn-secondary" id="closeCategoriesModal">Close</button>
+    </div>
+  </div>
+
   <!-- Expand Database / Pull Titles Engine Modal -->
   <div id="expandModal" class="modal-backdrop hidden">
     <div class="modal-box">
       <h3 style="color:var(--green-dark);">📥 Expand Database (TMDB)</h3>
-      <p style="font-size:0.78rem; color:var(--muted);">Pull new movies and series into your library. Zero duplicates guaranteed.</p>
-
       <div style="display:flex; flex-direction:column; gap:8px;">
         <div>
           <label style="font-size:0.75rem; font-weight:600; color:var(--muted);">TMDB API Key (v3):</label>
@@ -266,9 +355,9 @@
         </div>
 
         <div>
-          <label style="font-size:0.75rem; font-weight:600; color:var(--muted);">Genre Focus (Horror/War/Western excluded):</label>
+          <label style="font-size:0.75rem; font-weight:600; color:var(--muted);">Genre Focus:</label>
           <select id="expGenre">
-            <option value="all">All Allowed Genres</option>
+            <option value="all">All Allowed (No Horror/War/Western)</option>
             <option value="35">Comedy Only</option>
             <option value="10751">Family & Kids Only</option>
             <option value="9648">Mystery & Crime Only</option>
@@ -279,73 +368,58 @@
         </div>
 
         <div id="expStatus" style="font-size:0.78rem; color:#555; background:#FAF7F2; padding:8px; border-radius:6px; border:1px solid var(--border); min-height:36px; white-space:pre-line;">Ready to pull new titles.</div>
-
         <button class="btn" id="startExpandBtn" style="padding:10px;">🚀 Pull Titles & Add to Library</button>
-        <button class="btn btn-outline" id="downloadUpdatedCatalogBtn" style="display:none; font-size:0.78rem;">⬇️ Download Updated catalog.json (For GitHub)</button>
       </div>
-
       <button class="btn btn-secondary" id="closeExpandBtn" style="margin-top:6px;">Close</button>
     </div>
   </div>
 
-  <!-- Manage Categories Modal -->
-  <div id="categoriesModal" class="modal-backdrop hidden">
-    <div class="modal-box">
-      <h3 style="color:var(--green-dark);">Manage List Categories</h3>
-      <p style="font-size:0.78rem; color:var(--muted);">Rename or delete lists. Movies can be in multiple lists simultaneously!</p>
-      <div id="categoriesList" style="display:flex; flex-direction:column; gap:8px;"></div>
-      
-      <div style="border-top:1px solid var(--border); padding-top:12px; margin-top:10px;">
-        <h4 style="font-size:0.85rem; margin-bottom:4px;">Add New List Category</h4>
-        <div style="display:flex; gap:6px;">
-          <input type="text" id="newCategoryInput" placeholder="e.g. Weekend Binge or Documentary">
-          <button class="btn" id="addCategoryBtn">Add</button>
-        </div>
-      </div>
-      <button class="btn btn-secondary" id="closeCategoriesModal">Close</button>
-    </div>
-  </div>
-
-  <!-- Login / Household Modal -->
-  <div id="householdModal" class="modal-backdrop hidden">
-    <div class="modal-box">
-      <h3 style="color:var(--green-dark);">Household Sync (No Email)</h3>
-      <p style="font-size:0.78rem; color:var(--muted);">Set a username & password. Your husband logs in with the exact same credentials to sync.</p>
-      <div style="display:flex; flex-direction:column; gap:8px;">
-        <input type="text" id="userHouseholdInput" placeholder="Household Username (e.g. 32birch)">
-        <input type="password" id="passHouseholdInput" placeholder="Household Password">
-        <button class="btn" id="loginHouseholdBtn" style="width:100%;">Connect & Sync</button>
-        <button class="btn btn-secondary hidden" id="logoutBtn" style="width:100%;">Sign Out</button>
-      </div>
-      <button class="btn btn-secondary" id="closeHouseholdModal">Close</button>
-    </div>
-  </div>
-
-  <!-- Settings Modal -->
+  <!-- Settings Modal (Change Password & Backup) -->
   <div id="settingsModal" class="modal-backdrop hidden">
     <div class="modal-box">
-      <h3>Settings & Backup Recovery</h3>
+      <h3>Settings</h3>
+
+      <!-- Change Household Password -->
+      <div style="background:#FAF7F2; border:1px solid var(--border); padding:10px; border-radius:8px;">
+        <h4 style="font-size:0.85rem; color:var(--green-dark); margin-bottom:4px;">🔒 Change Household Password</h4>
+        <div style="display:flex; gap:6px;">
+          <input type="password" id="newHouseholdPassword" placeholder="New Password">
+          <button class="btn" id="savePasswordBtn">Update</button>
+        </div>
+      </div>
       
-      <div style="background:#EDF7EE; border:1px solid #C7E6C9; padding:12px; border-radius:8px;">
+      <!-- Backup & Restore -->
+      <div style="background:#EDF7EE; border:1px solid #C7E6C9; padding:10px; border-radius:8px;">
         <h4 style="font-size:0.85rem; color:var(--green-dark); margin-bottom:4px;">📥 Restore Lists From Backup</h4>
-        <p style="font-size:0.75rem; color:var(--muted); margin-bottom:8px;">Import a previously saved backup file to restore all your lists, ratings, and notes instantly:</p>
         <input type="file" id="importBackupFile" accept=".json" style="font-size:0.78rem; padding:4px;">
       </div>
 
-      <div style="background:#FAF7F2; border:1px solid var(--border); padding:12px; border-radius:8px; margin-top:8px;">
-        <h4 style="font-size:0.85rem; color:var(--green-dark); margin-bottom:4px;">💾 Save List Backup to Computer</h4>
-        <p style="font-size:0.75rem; color:var(--muted); margin-bottom:8px;">Downloads a copy of all your saved choices, categories, favorites, and notes:</p>
+      <div style="background:#FAF7F2; border:1px solid var(--border); padding:10px; border-radius:8px;">
+        <h4 style="font-size:0.85rem; color:var(--green-dark); margin-bottom:4px;">💾 Save List Backup</h4>
         <button class="btn btn-outline" id="exportBackupBtn" style="width:100%;">⬇️ Download Backup File (.json)</button>
       </div>
 
-      <div style="border-top:1px solid var(--border); padding-top:10px; margin-top:10px;">
+      <!-- Firebase Config -->
+      <div style="border-top:1px solid var(--border); padding-top:8px;">
         <h4 style="font-size:0.85rem;">Cloud Storage (Firebase)</h4>
-        <p style="font-size:0.75rem; color:var(--muted); margin-bottom:4px;">Paste your Firebase Config:</p>
         <textarea id="firebaseConfigInput" rows="3" placeholder='{"apiKey": "...", "projectId": "..."}'></textarea>
         <button class="btn" id="saveConfigBtn" style="margin-top:6px; width:100%;">Save Cloud Config</button>
       </div>
 
-      <button class="btn btn-secondary" id="closeSettingsModal" style="margin-top:10px;">Close</button>
+      <button class="btn btn-secondary" id="closeSettingsModal" style="margin-top:8px;">Close</button>
+    </div>
+  </div>
+
+  <!-- Household Login Modal -->
+  <div id="householdModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <h3 style="color:var(--green-dark);">Household Sync (32Birch)</h3>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <input type="text" id="userHouseholdInput" placeholder="Household Username (e.g. 32birch)">
+        <input type="password" id="passHouseholdInput" placeholder="Household Password">
+        <button class="btn" id="loginHouseholdBtn" style="width:100%;">Connect & Sync</button>
+      </div>
+      <button class="btn btn-secondary" id="closeHouseholdModal">Close</button>
     </div>
   </div>
 
@@ -357,18 +431,31 @@
       favorites: {},
       good: {},
       ratings: {},
-      userTitles: [], // Persists dynamically pulled titles across devices
+      whoPicked: {},
+      userTitles: [],
+      gamification: {
+        points: { 'Wife': 0, 'Husband': 0, 'Kids': 0 },
+        streaks: { 'Wife': 0, 'Husband': 0, 'Kids': 0 },
+        lastWatchDate: {}
+      },
       categories: [
-        { key: 'watchlist', label: 'Watchlist' },
-        { key: 'kids', label: 'Kids watchlist' },
-        { key: 'later', label: 'See later' },
-        { key: 'seen', label: 'Seen' },
-        { key: 'again', label: 'See again' },
-        { key: 'maybe', label: 'Not sure' },
-        { key: 'no', label: 'Pass' }
+        { key: 'watchlist', label: 'Watchlist', color: '#2D6A4F' },
+        { key: 'kids', label: 'Kids watchlist', color: '#E76F51' },
+        { key: 'later', label: 'See later', color: '#457B9D' },
+        { key: 'seen', label: 'Seen', color: '#6C757D' },
+        { key: 'again', label: 'See again', color: '#2A9D8F' },
+        { key: 'maybe', label: 'Not sure', color: '#E9C46A' },
+        { key: 'no', label: 'Pass', color: '#9E2A2B' }
       ]
     };
 
+    const PROFILES = [
+      { name: 'Wife', icon: '👤' },
+      { name: 'Husband', icon: '👨' },
+      { name: 'Kids', icon: '🎈' }
+    ];
+
+    let currentProfile = localStorage.getItem('ow_active_profile') || 'Wife';
     let activeHousehold = localStorage.getItem('ow_household_user') || '';
     let currentFilter = localStorage.getItem('ow_active_tab') || 'uncategorized';
     let pageSize = 25;
@@ -399,22 +486,35 @@
       return [];
     }
 
-    // --- 1. LOAD LOCAL DATA ---
+    // --- 1. LOAD LOCAL PERSISTENCE ---
     const savedLocal = localStorage.getItem('ow_local_data');
     if (savedLocal) {
       try {
         const parsed = JSON.parse(savedLocal);
-        if (parsed.lists) Object.assign(householdData.lists, parsed.lists);
-        if (parsed.notes) Object.assign(householdData.notes, parsed.notes);
-        if (parsed.favorites) Object.assign(householdData.favorites, parsed.favorites);
-        if (parsed.good) Object.assign(householdData.good, parsed.good);
-        if (parsed.ratings) Object.assign(householdData.ratings, parsed.ratings);
-        if (parsed.userTitles) householdData.userTitles = parsed.userTitles;
-        if (parsed.categories) householdData.categories = parsed.categories;
+        Object.assign(householdData, parsed);
       } catch(e) {}
     }
 
-    // --- 2. FIREBASE SYNC ---
+    // Update Profile Header Pill
+    function updateProfileUI() {
+      const p = PROFILES.find(x => x.name === currentProfile) || PROFILES[0];
+      document.getElementById('currentProfileIcon').textContent = p.icon;
+      document.getElementById('currentProfileName').textContent = p.name;
+      const pts = (householdData.gamification.points && householdData.gamification.points[p.name]) || 0;
+      document.getElementById('profileScoreBadge').textContent = `${pts} pts`;
+    }
+
+    // Profile Switcher click
+    document.getElementById('profilePickerBtn').onclick = () => {
+      const idx = PROFILES.findIndex(p => p.name === currentProfile);
+      const next = PROFILES[(idx + 1) % PROFILES.length];
+      currentProfile = next.name;
+      localStorage.setItem('ow_active_profile', currentProfile);
+      updateProfileUI();
+      renderFeed();
+    };
+
+    // --- 2. FIREBASE REALTIME SYNC ---
     function initFirebase() {
       const cfg = localStorage.getItem('ow_firebase_config');
       if (!cfg || !window.FB) return;
@@ -445,10 +545,13 @@
             householdData.favorites = { ...householdData.favorites, ...(cloud.favorites || {}) };
             householdData.good = { ...householdData.good, ...(cloud.good || {}) };
             householdData.ratings = { ...householdData.ratings, ...(cloud.ratings || {}) };
+            householdData.whoPicked = { ...householdData.whoPicked, ...(cloud.whoPicked || {}) };
+            if (cloud.gamification) householdData.gamification = cloud.gamification;
             if (cloud.userTitles) householdData.userTitles = cloud.userTitles;
             if (cloud.categories) householdData.categories = cloud.categories;
             localStorage.setItem('ow_local_data', JSON.stringify(householdData));
-            loadCatalog(); // Re-merge dynamically pulled user titles
+            updateProfileUI();
+            loadCatalog();
           } else if (localListsCount > 0) {
             syncHouseholdChange();
           }
@@ -458,21 +561,46 @@
 
     async function syncHouseholdChange() {
       localStorage.setItem('ow_local_data', JSON.stringify(householdData));
-      document.getElementById('syncText').textContent = 'Saved';
-      document.getElementById('syncDot').classList.remove('error');
+      updateProfileUI();
 
       if (db && activeHousehold) {
         try {
           const hhDocRef = window.FB.doc(db, "households", activeHousehold);
           await window.FB.setDoc(hhDocRef, householdData, { merge: true });
-          document.getElementById('syncText').textContent = 'Synced';
-        } catch(e) {
-          document.getElementById('syncText').textContent = 'Saved Locally';
-        }
+        } catch(e) {}
       }
     }
 
-    // --- 3. AUTO-COMBINE & DEDUPLICATE ---
+    // --- 3. GAMIFICATION & POINTS HELPER ---
+    function awardPoints(profile, pts, action) {
+      if (!householdData.gamification.points) householdData.gamification.points = {};
+      householdData.gamification.points[profile] = (householdData.gamification.points[profile] || 0) + pts;
+
+      if (action === 'watched') {
+        // Track streak
+        const today = new Date().toISOString().slice(0, 10);
+        const last = (householdData.gamification.lastWatchDate && householdData.gamification.lastWatchDate[profile]);
+        if (!householdData.gamification.streaks) householdData.gamification.streaks = {};
+
+        if (last) {
+          const diffDays = Math.round((new Date(today) - new Date(last)) / (1000 * 60 * 60 * 24));
+          if (diffDays === 1) {
+            householdData.gamification.streaks[profile] = (householdData.gamification.streaks[profile] || 1) + 1;
+          } else if (diffDays > 1) {
+            householdData.gamification.streaks[profile] = 1;
+          }
+        } else {
+          householdData.gamification.streaks[profile] = 1;
+        }
+
+        if (!householdData.gamification.lastWatchDate) householdData.gamification.lastWatchDate = {};
+        householdData.gamification.lastWatchDate[profile] = today;
+      }
+
+      syncHouseholdChange();
+    }
+
+    // --- 4. AUTO-COMBINE & DEDUPLICATE ---
     async function loadCatalog() {
       let baseList = [];
       const catalogFiles = ['catalog.json', 'catalog_2.json'];
@@ -487,7 +615,14 @@
         } catch(e) {}
       }
 
-      // Merge Base Files + Locally/Cloud Pulled Titles
+      // Offline caching: save catalog into local storage
+      if (baseList.length > 0) {
+        try { localStorage.setItem('ow_cached_catalog', JSON.stringify(baseList)); } catch(e){}
+      } else {
+        const cached = localStorage.getItem('ow_cached_catalog');
+        if (cached) baseList = JSON.parse(cached);
+      }
+
       const combined = [...(householdData.userTitles || []), ...baseList];
 
       const seenKeys = new Set();
@@ -520,7 +655,7 @@
       return Object.entries(counts).sort((a,b) => b[1] - a[1]).map(e => e[0]);
     }
 
-    // --- 4. NAVIGATION TABS ---
+    // --- 5. NAVIGATION TABS (WITH COLOR THEMING) ---
     function renderNavTabs() {
       const container = document.getElementById('navTabsContainer');
       const counts = { all: catalog.length, uncategorized: 0, favorites: 0, good: 0 };
@@ -542,6 +677,11 @@
         if (householdData.good[key] || householdData.good[item.id]) counts.good++;
       });
 
+      // Update active theme color variable
+      const activeCat = householdData.categories.find(c => c.key === currentFilter);
+      const themeColor = activeCat ? (activeCat.color || '#2D6A4F') : '#2D6A4F';
+      document.documentElement.style.setProperty('--active-theme-color', themeColor);
+
       let tabsHtml = `
         <button class="nav-tab ${currentFilter==='uncategorized'?'active':''}" data-list="uncategorized">🏠 Home (${counts.uncategorized})</button>
         <button class="nav-tab ${currentFilter==='all'?'active':''}" data-list="all">📚 All Titles (${counts.all})</button>
@@ -550,7 +690,9 @@
       `;
 
       householdData.categories.forEach(c => {
-        tabsHtml += `<button class="nav-tab ${currentFilter===c.key?'active':''}" data-list="${c.key}">${c.label} (${counts[c.key]||0})</button>`;
+        const isCurrent = currentFilter === c.key;
+        const color = c.color || '#2D6A4F';
+        tabsHtml += `<button class="nav-tab ${isCurrent?'active':''}" data-list="${c.key}" style="${isCurrent ? `background:${color}; color:#fff;` : `border-color:${color}44;`}">${c.label} (${counts[c.key]||0})</button>`;
       });
 
       container.innerHTML = tabsHtml;
@@ -562,6 +704,7 @@
           currentFilter = tab.getAttribute('data-list');
           localStorage.setItem('ow_active_tab', currentFilter);
           page = 1;
+          renderNavTabs();
           renderFeed();
         };
       });
@@ -573,10 +716,11 @@
       return cast.split(',').map(s => s.trim()).filter(Boolean).slice(0, 4).join(', ');
     }
 
-    // --- 5. RENDER FEED ---
+    // --- 6. RENDER FEED ---
     function renderFeed() {
       const container = document.getElementById('catalogFeed');
       const search = document.getElementById('searchInput').value.toLowerCase();
+      const holiday = document.getElementById('holidaySearchInput').value.toLowerCase();
       const format = document.getElementById('formatFilter').value;
       const coll = document.getElementById('collectionFilter').value;
       const sort = document.getElementById('sortBy').value;
@@ -601,14 +745,19 @@
 
         if (format && item.format !== format) return false;
 
+        // SMART COLLECTION FILTERS
         if (coll === 'dateNight') {
           const g = item.genres || [];
-          const isDateGenre = g.some(x => ['Comedy', 'Romance', 'Mystery', 'Drama', 'Adventure'].includes(x));
-          if (!isDateGenre || item.audience === 'Little kids' || g.includes('Animation')) return false;
+          if (!g.some(x => ['Comedy', 'Romance', 'Mystery', 'Drama', 'Adventure'].includes(x)) || item.audience === 'Little kids' || g.includes('Animation')) return false;
+        } else if (coll === 'kidsSmart') {
+          if (item.audience !== 'Family' && item.audience !== 'Little kids') return false;
         } else if (coll === 'basedOnFavs') {
           if (isSeenOrPass || !(item.genres || []).some(x => topFavGenres.includes(x))) return false;
         } else if (coll === 'basedOnGood') {
           if (isSeenOrPass || !(item.genres || []).some(x => topGoodGenres.includes(x))) return false;
+        } else if (coll === 'under2Hours') {
+          // Quick watch filter (under 115 min or TV episodes)
+          if (item.runtime && item.runtime > 115) return false;
         } else if (coll === 'favorites' && !householdData.favorites[key] && !householdData.favorites[item.id]) return false;
         else if (coll === 'good' && !householdData.good[key] && !householdData.good[item.id]) return false;
         else if (coll === 'high_rated' && (householdData.ratings[key] || householdData.ratings[item.id] || 0) < 4) return false;
@@ -617,6 +766,12 @@
         else if (coll === 'parenting' && !item.parentingComedy) return false;
         else if (coll === 'renovation' && !item.renovation) return false;
         else if (coll === '2019-2026' && !(item.year >= 2019 && item.year <= 2026)) return false;
+
+        // Holiday / Seasonal Filter
+        if (holiday) {
+          const hay = `${item.title} ${item.summary || ''} ${(item.genres || []).join(' ')}`.toLowerCase();
+          if (!hay.includes(holiday)) return false;
+        }
 
         if (search) {
           const target = `${item.title} ${item.cast||''} ${item.summary||''}`.toLowerCase();
@@ -649,11 +804,15 @@
       const isGood = !!(householdData.good[key] || householdData.good[item.id]);
       const rating = householdData.ratings[key] || householdData.ratings[item.id] || 0;
       const note = householdData.notes[key] || householdData.notes[item.id] || '';
+      const who = householdData.whoPicked[key] || householdData.whoPicked[item.id] || '';
       const castText = formatCast(item.cast);
 
+      // Chips with corresponding custom category color
       const chips = householdData.categories.map(c => {
         const isSelected = assignedLists.includes(c.key);
-        return `<button class="list-chip ${isSelected ? 'selected' : ''}" onclick="window.toggleList(${item.id}, '${c.key}')">${isSelected ? '✓ ' : ''}${c.label}</button>`;
+        const color = c.color || '#2D6A4F';
+        const style = isSelected ? `background:${color}; color:#fff; border-color:${color};` : '';
+        return `<button class="list-chip ${isSelected ? 'selected' : ''}" style="${style}" onclick="window.toggleList(${item.id}, '${c.key}')">${isSelected ? '✓ ' : ''}${c.label}</button>`;
       }).join('');
 
       let stars = '';
@@ -664,6 +823,9 @@
       const fallbackUrl = getPosterFallback(item.title, item.year);
       const coverSrc = item.cover_url || fallbackUrl;
 
+      // Manufacturer / Studio
+      const platformDisplay = item.platform ? `<span class="platform-badge">${item.platform}</span>` : '';
+
       return `
         <article class="card">
           <div class="cover-thumb-wrap" onclick="window.openModal(${item.id})">
@@ -671,8 +833,11 @@
           </div>
           <div class="card-body">
             <div>
-              <h2 class="card-title">${item.title}</h2>
-              <div class="card-meta">${item.year} • ${item.format} • ${item.platform || ''}</div>
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px;">
+                <h2 class="card-title">${item.title}</h2>
+                ${platformDisplay}
+              </div>
+              <div class="card-meta">${item.year} • ${item.format}</div>
               
               ${castText ? `<div class="card-cast">👥 <strong>Cast:</strong> ${castText}</div>` : ''}
 
@@ -688,6 +853,7 @@
               <button class="curate-btn ${isFav ? 'active-fav' : ''}" onclick="window.toggleFavorite(${item.id})">❤️ Fav</button>
               <button class="curate-btn ${isGood ? 'active-good' : ''}" onclick="window.toggleGood(${item.id})">👍 Good</button>
               <div class="star-rating">${stars}</div>
+              <button class="who-picked-btn" onclick="window.cycleWhoPicked(${item.id})">${who ? `👤 ${who}'s Pick` : '+ Add Who Picked'}</button>
             </div>
 
             <div>
@@ -704,7 +870,7 @@
       `;
     }
 
-    // --- 6. ACTIONS ---
+    // --- 7. ACTIONS & GAMIFICATION INTEGRATION ---
     window.toggleList = function(id, listKey) {
       const item = catalog.find(x => x.id === id);
       if (!item) return;
@@ -719,6 +885,13 @@
           current.splice(idx, 1);
         } else {
           current.push(listKey);
+          // Award points
+          if (listKey === 'seen') {
+            awardPoints(currentProfile, 20, 'watched');
+            triggerConfetti();
+          } else {
+            awardPoints(currentProfile, 5, 'categorized');
+          }
         }
       }
 
@@ -735,12 +908,31 @@
       renderFeed();
     };
 
+    window.cycleWhoPicked = function(id) {
+      const item = catalog.find(x => x.id === id);
+      const titleKey = getItemKey(item);
+      const current = householdData.whoPicked[titleKey] || householdData.whoPicked[id] || '';
+      const order = ['', 'Wife', 'Husband', 'Kids'];
+      const next = order[(order.indexOf(current) + 1) % order.length];
+
+      if (!next) {
+        delete householdData.whoPicked[id];
+        if (titleKey) delete householdData.whoPicked[titleKey];
+      } else {
+        householdData.whoPicked[id] = next;
+        if (titleKey) householdData.whoPicked[titleKey] = next;
+      }
+      syncHouseholdChange();
+      renderFeed();
+    };
+
     window.toggleFavorite = function(id) {
       const item = catalog.find(x => x.id === id);
       const titleKey = getItemKey(item);
       const current = !!(householdData.favorites[titleKey] || householdData.favorites[id]);
       householdData.favorites[id] = !current;
       if (titleKey) householdData.favorites[titleKey] = !current;
+      if (!current) awardPoints(currentProfile, 5, 'favorite');
 
       syncHouseholdChange();
       renderNavTabs();
@@ -753,6 +945,7 @@
       const current = !!(householdData.good[titleKey] || householdData.good[id]);
       householdData.good[id] = !current;
       if (titleKey) householdData.good[titleKey] = !current;
+      if (!current) awardPoints(currentProfile, 5, 'good');
 
       syncHouseholdChange();
       renderNavTabs();
@@ -764,6 +957,7 @@
       const titleKey = getItemKey(item);
       householdData.ratings[id] = val;
       if (titleKey) householdData.ratings[titleKey] = val;
+      if (val > 0) awardPoints(currentProfile, 10, 'rating');
 
       syncHouseholdChange();
       renderNavTabs();
@@ -776,37 +970,10 @@
       const val = text.trim();
       householdData.notes[id] = val;
       if (titleKey) householdData.notes[titleKey] = val;
-
       syncHouseholdChange();
     };
 
-    // --- 7. MODALS ---
-    window.openModal = function(id) {
-      const item = catalog.find(x => x.id === id);
-      if (!item) return;
-      document.getElementById('modalTitle').textContent = item.title;
-      document.getElementById('modalYearFormat').textContent = `${item.year} • ${item.format} • ${item.platform||''}`;
-      
-      const castText = formatCast(item.cast);
-      document.getElementById('modalCast').innerHTML = castText ? `👥 <strong>Cast:</strong> ${castText}` : '';
-      document.getElementById('modalSummary').textContent = item.summary || 'No summary available.';
-
-      const fallbackUrl = getPosterFallback(item.title, item.year);
-      const img = document.getElementById('modalImg');
-      img.src = item.cover_url || fallbackUrl;
-      img.onerror = () => { img.src = fallbackUrl; };
-
-      document.getElementById('findPosterBtn').href = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(item.title + ' ' + item.year + ' movie poster')}`;
-
-      const trailerBox = document.getElementById('modalTrailerContainer');
-      const trailerSearch = `https://www.youtube.com/results?search_query=${encodeURIComponent(item.title + ' ' + item.year + ' trailer')}`;
-      trailerBox.innerHTML = `<a href="${trailerSearch}" target="_blank" class="btn btn-secondary" style="width:100%;">▶ Trailer</a>`;
-
-      document.getElementById('coverModal').classList.remove('hidden');
-    };
-    document.getElementById('modalCloseBtn').onclick = () => document.getElementById('coverModal').classList.add('hidden');
-
-    // --- 8. SMART PICKER & SURPRISE ME ---
+    // --- 8. SMART PICKER & ROULETTE (WITH CONFETTI) ---
     window.openPickerModal = function() {
       hideAllModals();
       document.getElementById('pickerModal').classList.remove('hidden');
@@ -815,6 +982,7 @@
 
     window.spinPicker = function(mode = 'random') {
       currentPickerMode = mode;
+      // ONLY SUGGEST UNWATCHED
       const unwatched = catalog.filter(item => {
         const assigned = getAssignedLists(item);
         return !assigned.includes('seen') && !assigned.includes('no');
@@ -829,24 +997,23 @@
           return g.some(x => ['Comedy', 'Romance', 'Mystery', 'Drama', 'Adventure'].includes(x)) &&
                  item.audience !== 'Little kids' && !g.includes('Animation');
         });
-        reasonText = "🍷 Perfect for Date Night";
+        reasonText = "🍷 Date Night Pick (Top Comedy/Mystery/Drama)";
+      } else if (mode === 'family') {
+        pool = unwatched.filter(item => item.audience === 'Family' || item.audience === 'Little kids');
+        reasonText = "🍿 Family Movie Night Pick";
       } else if (mode === 'favorites') {
         const topFavs = getTopGenres('favorites').slice(0, 3);
         pool = unwatched.filter(item => (item.genres || []).some(g => topFavs.includes(g)));
-        reasonText = `💡 Matches your Favorite genres: ${topFavs.slice(0,2).join(', ')}`;
-      } else if (mode === 'good') {
-        const topGood = getTopGenres('good').slice(0, 3);
-        pool = unwatched.filter(item => (item.genres || []).some(g => topGood.includes(g)));
-        reasonText = `👍 Matches movies you marked Good`;
+        reasonText = `💡 Based on Favorites: ${topFavs.slice(0,2).join(', ')}`;
       } else {
         const watchlistItems = unwatched.filter(item => getAssignedLists(item).includes('watchlist'));
         pool = watchlistItems.length > 0 ? watchlistItems : unwatched;
-        reasonText = watchlistItems.length > 0 ? "🎯 From your Watchlist" : "🎲 Random Discovery";
+        reasonText = watchlistItems.length > 0 ? "🎯 From your Watchlist" : "🎲 Surprise Discovery";
       }
 
       if (pool.length === 0) pool = unwatched;
       if (pool.length === 0) {
-        alert("No titles match this recommendation criteria!");
+        alert("All matching titles have already been watched!");
         return;
       }
 
@@ -854,6 +1021,8 @@
       if (candidates.length === 0) candidates = pool;
       const pick = candidates[Math.floor(Math.random() * candidates.length)];
       lastPickedId = pick.id;
+
+      triggerConfetti();
 
       document.getElementById('pickerTitle').textContent = pick.title;
       document.getElementById('pickerMeta').textContent = `${pick.year} • ${pick.format} • ${(pick.genres||[]).slice(0,3).join(', ')}`;
@@ -877,136 +1046,135 @@
     document.getElementById('openPickerBtn').onclick = window.openPickerModal;
     document.getElementById('closePickerBtn').onclick = hideAllModals;
 
-    document.getElementById('quickDateNightBtn').onclick = () => {
-      document.getElementById('collectionFilter').value = 'dateNight';
-      page = 1;
-      renderFeed();
-    };
+    // --- 9. STICKER BADGES & SCOREBOARD ---
+    const BADGES = [
+      { id: 'space', name: 'Space Explorer', icon: '🚀', genre: 'Sci-Fi' },
+      { id: 'hero', name: 'Superhero Squad', icon: '🦸', genre: 'Action' },
+      { id: 'animal', name: 'Animal Adventurer', icon: '🐾', genre: 'Animation' },
+      { id: 'magic', name: 'Magic & Myth', icon: '🧙', genre: 'Fantasy' },
+      { id: 'detective', name: 'Junior Detective', icon: '🕵️', genre: 'Mystery' }
+    ];
 
-    // --- 9. IN-APP DATABASE EXPANSION ENGINE ---
-    const savedBuilderKey = localStorage.getItem('tmdb_builder_key');
-    if (savedBuilderKey) document.getElementById('expKeyInput').value = savedBuilderKey;
-
-    document.getElementById('openExpandBtn').onclick = () => {
+    document.getElementById('openBadgesBtn').onclick = () => {
       hideAllModals();
-      document.getElementById('expandModal').classList.remove('hidden');
+      const container = document.getElementById('badgesContainer');
+      const seenMovies = catalog.filter(item => getAssignedLists(item).includes('seen'));
+
+      container.innerHTML = BADGES.map(b => {
+        const count = seenMovies.filter(m => (m.genres || []).includes(b.genre)).length;
+        const unlocked = count >= 2;
+        return `
+          <div style="background:${unlocked ? '#D8F3DC' : '#FAF7F2'}; border:1px solid ${unlocked ? '#40916C' : '#ccc'}; border-radius:10px; padding:10px; text-align:center;">
+            <div style="font-size:2rem; filter:${unlocked ? 'none' : 'grayscale(1)'}">${b.icon}</div>
+            <strong style="font-size:0.8rem; color:${unlocked ? '#1B4332' : '#888'}; display:block;">${b.name}</strong>
+            <span style="font-size:0.72rem; color:#666;">${unlocked ? 'Unlocked! 🌟' : `${count}/2 ${b.genre}`}</span>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('badgesModal').classList.remove('hidden');
     };
-    document.getElementById('closeExpandBtn').onclick = hideAllModals;
+    document.getElementById('closeBadgesBtn').onclick = hideAllModals;
 
-    const TMDB_GENRES = {
-      28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy", 80: "Crime",
-      99: "Documentary", 18: "Drama", 10751: "Family", 14: "Fantasy", 36: "History",
-      10402: "Music", 9648: "Mystery", 10749: "Romance", 878: "Sci-Fi", 53: "Thriller"
+    // Scoreboard
+    document.getElementById('openScoreboardBtn').onclick = () => {
+      hideAllModals();
+      const p = householdData.gamification.points || {};
+      const s = householdData.gamification.streaks || {};
+
+      document.getElementById('streaksDisplay').innerHTML = PROFILES.map(pr => `
+        <div>${pr.icon} <strong>${pr.name}:</strong> ${s[pr.name] || 0} day streak 🔥</div>
+      `).join('');
+
+      document.getElementById('scoresDisplay').innerHTML = PROFILES.map(pr => `
+        <div>${pr.icon} <strong>${pr.name}:</strong> ${p[pr.name] || 0} total points 🏅</div>
+      `).join('');
+
+      document.getElementById('scoreboardModal').classList.remove('hidden');
+    };
+    document.getElementById('closeScoreboardBtn').onclick = hideAllModals;
+
+    // --- 10. CATEGORIES MANAGER WITH COLOR PICKER ---
+    const SWATCH_PALETTE = ['#2D6A4F', '#E76F51', '#457B9D', '#6C757D', '#2A9D8F', '#E9C46A', '#9E2A2B', '#7B2CBF'];
+
+    function renderCategoriesManager() {
+      const box = document.getElementById('categoriesList');
+      box.innerHTML = householdData.categories.map((c, i) => `
+        <div style="background:#FAF7F2; padding:8px 10px; border-radius:8px; border:1px solid var(--border);">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:600; font-size:0.85rem; color:${c.color||'#2D6A4F'};">● ${c.label}</span>
+            <div style="display:flex; gap:6px;">
+              <button onclick="window.renameCategory(${i})" class="btn btn-outline" style="padding:4px 8px; font-size:0.75rem;">✏️ Rename</button>
+              <button onclick="window.deleteCategory(${i})" style="border:none; background:transparent; color:#c00; font-weight:bold; font-size:0.85rem; cursor:pointer;">🗑️</button>
+            </div>
+          </div>
+          <!-- Color Swatches -->
+          <div style="display:flex; gap:5px; margin-top:6px;">
+            ${SWATCH_PALETTE.map(col => `
+              <div onclick="window.setCategoryColor(${i}, '${col}')" style="width:18px; height:18px; border-radius:50%; background:${col}; cursor:pointer; border:${c.color===col ? '2px solid #000':'1px solid #ddd'};"></div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.setCategoryColor = function(index, color) {
+      householdData.categories[index].color = color;
+      syncHouseholdChange();
+      renderCategoriesManager();
+      renderNavTabs();
     };
 
-    document.getElementById('startExpandBtn').onclick = async () => {
-      const key = document.getElementById('expKeyInput').value.trim();
-      if (!key) { alert("Please enter your TMDB API Key!"); return; }
-      localStorage.setItem('tmdb_builder_key', key);
-
-      const fmt = document.getElementById('expFormat').value;
-      const targetCount = parseInt(document.getElementById('expBatchSize').value);
-      const startYr = parseInt(document.getElementById('expStartYear').value) || 2019;
-      const endYr = parseInt(document.getElementById('expEndYear').value) || 2026;
-      const genreVal = document.getElementById('expGenre').value;
-      const status = document.getElementById('expStatus');
-      const btn = document.getElementById('startExpandBtn');
-      const dlBtn = document.getElementById('downloadUpdatedCatalogBtn');
-
-      btn.disabled = true;
-      status.innerText = "Querying TMDB for new titles...";
-
-      const seenKeys = new Set(catalog.map(item => getItemKey(item)));
-      let added = [];
-      let nextId = 6000 + Date.now() % 10000;
-      let pageNum = 1;
-
-      // Without Horror (27), War (10752), Western (37)
-      let withoutStr = "27,10752,37";
-      let genreParam = genreVal !== 'all' ? `&with_genres=${genreVal}` : '';
-
-      try {
-        while (added.length < targetCount && pageNum <= 60) {
-          status.innerText = `Fetching page ${pageNum}...\nAdded ${added.length} / ${targetCount} new titles so far.`;
-
-          const fetchMovies = (fmt === 'both' || fmt === 'movie');
-          const fetchTV = (fmt === 'both' || fmt === 'tv');
-
-          const movieUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${key}&without_genres=${withoutStr}${genreParam}&primary_release_date.gte=${startYr}-01-01&primary_release_date.lte=${endYr}-12-31&sort_by=popularity.desc&page=${pageNum}`;
-          const tvUrl = `https://api.themoviedb.org/3/discover/tv?api_key=${key}&without_genres=${withoutStr}${genreParam}&first_air_date.gte=${startYr}-01-01&first_air_date.lte=${endYr}-12-31&sort_by=popularity.desc&page=${pageNum}`;
-
-          const promises = [];
-          if (fetchMovies) promises.push(fetch(movieUrl).then(r=>r.json()).catch(()=>({results:[]})));
-          if (fetchTV) promises.push(fetch(tvUrl).then(r=>r.json()).catch(()=>({results:[]})));
-
-          const results = await Promise.all(promises);
-          let batch = [];
-          if (fetchMovies && results[0]) batch.push(...(results[0].results||[]).map(r=>({...r, _fmt:'Movie'})));
-          if (fetchTV && results[fetchMovies ? 1 : 0]) batch.push(...(results[fetchMovies ? 1 : 0].results||[]).map(r=>({...r, _fmt:'TV'})));
-
-          for (let item of batch) {
-            const gIds = item.genre_ids || [];
-            if (gIds.includes(27) || gIds.includes(10752) || gIds.includes(37)) continue;
-
-            const title = (item.title || item.name || '').trim();
-            const date = item.release_date || item.first_air_date || `${startYr}`;
-            const yr = parseInt(date.slice(0,4)) || startYr;
-            const keyStr = `${title.toLowerCase()}_${yr}`;
-
-            if (seenKeys.has(keyStr)) continue;
-            seenKeys.add(keyStr);
-
-            const g = gIds.map(id => TMDB_GENRES[id]).filter(Boolean);
-            const cover = item.poster_path ? `https://image.tmdb.org/t/p/w300_and_h450_face${item.poster_path}` : '';
-            let audience = "Adults";
-            if (g.includes("Family") || g.includes("Kids")) audience = "Family";
-            else if (item.vote_average >= 7.0) audience = "Teens+";
-
-            const newEntry = {
-              id: nextId++,
-              title: title,
-              year: yr,
-              format: item._fmt,
-              platform: "Theatrical / Streaming",
-              audience: audience,
-              genres: g,
-              summary: item.overview || "Plot summary available on release.",
-              cover_url: cover,
-              shortlist: item.vote_average >= 7.5
-            };
-
-            added.push(newEntry);
-            if (added.length >= targetCount) break;
-          }
-
-          pageNum++;
-        }
-
-        // Add to userTitles (persists across sync and page refreshes)
-        householdData.userTitles = [...(householdData.userTitles || []), ...added];
-        await syncHouseholdChange();
-        await loadCatalog();
-
-        status.innerText = `🎉 Success! Added ${added.length} new titles to your database.\nTotal library count is now ${catalog.length} titles.`;
-
-        // Enable 1-click download for PC users to drop into GitHub if desired
-        dlBtn.style.display = 'block';
-        dlBtn.onclick = () => {
-          const blob = new Blob([JSON.stringify(catalog, null, 2)], { type: "application/json" });
-          const a = document.createElement('a');
-          a.href = URL.createObjectURL(blob);
-          a.download = "catalog.json";
-          a.click();
-        };
-
-      } catch(err) {
-        status.innerText = "Error pulling titles: " + err.message;
-      } finally {
-        btn.disabled = false;
+    window.renameCategory = function(index) {
+      const current = householdData.categories[index].label;
+      const updated = prompt(`Enter new name for "${current}":`, current);
+      if (updated && updated.trim() && updated.trim() !== current) {
+        householdData.categories[index].label = updated.trim();
+        syncHouseholdChange();
+        renderCategoriesManager();
+        renderNavTabs();
+        renderFeed();
       }
     };
 
-    // --- 10. PULL FRESH 20 (LAST 6 MONTHS) ---
+    window.deleteCategory = function(index) {
+      if (confirm(`Delete the "${householdData.categories[index].label}" category?`)) {
+        householdData.categories.splice(index, 1);
+        syncHouseholdChange();
+        renderCategoriesManager();
+        renderNavTabs();
+        renderFeed();
+      }
+    };
+
+    document.getElementById('addCategoryBtn').onclick = () => {
+      const label = document.getElementById('newCategoryInput').value.trim();
+      if (!label) return;
+      const key = label.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      const color = SWATCH_PALETTE[householdData.categories.length % SWATCH_PALETTE.length];
+      householdData.categories.push({ key, label, color });
+      document.getElementById('newCategoryInput').value = '';
+      syncHouseholdChange();
+      renderCategoriesManager();
+      renderNavTabs();
+      renderFeed();
+    };
+
+    // --- 11. KIDS MODE TOGGLE ---
+    document.getElementById('kidsModeToggleBtn').onclick = () => {
+      document.body.classList.toggle('kids-mode');
+      const isKids = document.body.classList.contains('kids-mode');
+      document.getElementById('kidsModeToggleBtn').textContent = isKids ? '🎨 Normal Mode' : '🎈 Kids Mode';
+      document.getElementById('appTitle').textContent = isKids ? '🎈 Family Watchlist' : 'Our Watchlist';
+      if (isKids) {
+        document.getElementById('collectionFilter').value = 'family';
+      } else {
+        document.getElementById('collectionFilter').value = '';
+      }
+      renderFeed();
+    };
+
+    // --- 12. PULL FRESH 20 (LAST 6 MONTHS) ---
     document.getElementById('pullFresh20Btn').onclick = async () => {
       let key = localStorage.getItem('tmdb_builder_key');
       if (!key) {
@@ -1030,8 +1198,14 @@
           ...(tRes.results || []).slice(0, 10).map(r => ({ ...r, _fmt: 'TV' }))
         ];
 
+        const GENRE_MAP = {
+          28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy", 80: "Crime",
+          99: "Documentary", 18: "Drama", 10751: "Family", 14: "Fantasy", 36: "History",
+          10402: "Music", 9648: "Mystery", 10749: "Romance", 878: "Sci-Fi", 53: "Thriller"
+        };
+
         let addedCount = 0;
-        let nextId = 5000 + Date.now() % 10000;
+        let nextId = 7000 + Date.now() % 10000;
 
         combined.forEach(item => {
           const title = (item.title || item.name || '').trim();
@@ -1040,7 +1214,7 @@
 
           const exists = catalog.some(x => getItemKey(x) === keyStr);
           if (!exists) {
-            const g = (item.genre_ids || []).map(id => TMDB_GENRES[id]).filter(Boolean);
+            const g = (item.genre_ids || []).map(id => GENRE_MAP[id]).filter(Boolean);
             const cover = item.poster_path ? `https://image.tmdb.org/t/p/w300_and_h450_face${item.poster_path}` : '';
             const newEntry = {
               id: nextId++,
@@ -1070,62 +1244,15 @@
       }
     };
 
-    // --- 11. CATEGORIES MANAGER ---
-    function renderCategoriesManager() {
-      const box = document.getElementById('categoriesList');
-      box.innerHTML = householdData.categories.map((c, i) => `
-        <div style="display:flex; justify-content:space-between; align-items:center; background:#FAF7F2; padding:8px 10px; border-radius:8px; border:1px solid var(--border);">
-          <span style="font-weight:600; font-size:0.85rem;">${c.label}</span>
-          <div style="display:flex; gap:6px;">
-            <button onclick="window.renameCategory(${i})" class="btn btn-outline" style="padding:4px 8px; font-size:0.75rem;">✏️ Rename</button>
-            <button onclick="window.deleteCategory(${i})" style="border:none; background:transparent; color:#c00; font-weight:bold; font-size:0.85rem; cursor:pointer;">🗑️</button>
-          </div>
-        </div>
-      `).join('');
-    }
+    // --- 13. PRINTABLE & SHARE ---
+    document.getElementById('printListBtn').onclick = () => window.print();
 
-    window.renameCategory = function(index) {
-      const current = householdData.categories[index].label;
-      const updated = prompt(`Enter new name for "${current}":`, current);
-      if (updated && updated.trim() && updated.trim() !== current) {
-        householdData.categories[index].label = updated.trim();
-        syncHouseholdChange();
-        renderCategoriesManager();
-        renderNavTabs();
-        renderFeed();
-      }
-    };
-
-    window.deleteCategory = function(index) {
-      if (confirm(`Delete the "${householdData.categories[index].label}" category?`)) {
-        householdData.categories.splice(index, 1);
-        syncHouseholdChange();
-        renderCategoriesManager();
-        renderNavTabs();
-        renderFeed();
-      }
-    };
-
-    document.getElementById('addCategoryBtn').onclick = () => {
-      const label = document.getElementById('newCategoryInput').value.trim();
-      if (!label) return;
-      const key = label.toLowerCase().replace(/[^a-z0-9]/g, '_');
-      householdData.categories.push({ key, label });
-      document.getElementById('newCategoryInput').value = '';
-      syncHouseholdChange();
-      renderCategoriesManager();
-      renderNavTabs();
-      renderFeed();
-    };
-
-    // --- 12. SHARE & BACKUP ---
     document.getElementById('shareListBtn').onclick = async () => {
       let listTitle = "Our Watchlist";
       const cat = householdData.categories.find(c => c.key === currentFilter);
       if (cat) listTitle = cat.label;
       else if (currentFilter === 'favorites') listTitle = "Favorites";
       else if (currentFilter === 'good') listTitle = "Good Recommendations";
-      else if (currentFilter === 'uncategorized') listTitle = "Uncategorized Titles";
 
       const matchedTitles = catalog.filter(item => {
         const assigned = getAssignedLists(item);
@@ -1140,20 +1267,28 @@
       const shareText = `🍿 ${listTitle} (${matchedTitles.length} titles):\n\n${matchedTitles.join('\n')}\n\nView our catalog: https://plikapisike.github.io/our-watchlist/`;
 
       if (navigator.share) {
-        try {
-          await navigator.share({ title: listTitle, text: shareText });
-        } catch(e) {}
+        try { await navigator.share({ title: listTitle, text: shareText }); } catch(e) {}
       } else {
         navigator.clipboard.writeText(shareText).then(() => {
-          alert(`Copied "${listTitle}" to clipboard! You can paste it into a text message or email.`);
+          alert(`Copied "${listTitle}" to clipboard! Ready to paste into a message.`);
         });
       }
+    };
+
+    // --- 14. SETTINGS & PASSWORD CHANGE ---
+    document.getElementById('savePasswordBtn').onclick = async () => {
+      const p = document.getElementById('newHouseholdPassword').value.trim();
+      if (!p) { alert("Please enter a new password"); return; }
+      householdData.password = p;
+      localStorage.setItem('ow_household_pass', p);
+      await syncHouseholdChange();
+      alert("🔒 Household password updated successfully!");
     };
 
     document.getElementById('exportBackupBtn').onclick = () => {
       const backupData = {
         app: "Our Watchlist",
-        version: 2,
+        version: 3,
         exportedAt: new Date().toISOString(),
         household: activeHousehold,
         data: householdData
@@ -1173,20 +1308,19 @@
         try {
           const imported = JSON.parse(evt.target.result);
           const payload = imported.data || imported;
-          
-          if (!payload.lists && !payload.categories) throw new Error("Invalid backup structure.");
-
           if (payload.lists) Object.assign(householdData.lists, payload.lists);
           if (payload.notes) Object.assign(householdData.notes, payload.notes);
           if (payload.favorites) Object.assign(householdData.favorites, payload.favorites);
           if (payload.good) Object.assign(householdData.good, payload.good);
           if (payload.ratings) Object.assign(householdData.ratings, payload.ratings);
+          if (payload.whoPicked) Object.assign(householdData.whoPicked, payload.whoPicked);
+          if (payload.gamification) householdData.gamification = payload.gamification;
           if (payload.userTitles) householdData.userTitles = payload.userTitles;
           if (payload.categories) householdData.categories = payload.categories;
 
           await syncHouseholdChange();
           await loadCatalog();
-          alert("🎉 Backup successfully restored! All your lists, notes, and favorites are back.");
+          alert("🎉 Backup restored successfully!");
           hideAllModals();
         } catch(err) {
           alert("Could not import backup: " + err.message);
@@ -1195,8 +1329,40 @@
       reader.readAsText(file);
     };
 
-    // --- 13. DOCK & SEARCH ---
+    // --- 15. EXPAND MODAL ---
+    document.getElementById('openExpandBtn').onclick = () => {
+      hideAllModals();
+      document.getElementById('expandModal').classList.remove('hidden');
+    };
+    document.getElementById('closeExpandBtn').onclick = hideAllModals;
+
+    // --- 16. MODALS & NAVIGATION ---
+    window.openModal = function(id) {
+      const item = catalog.find(x => x.id === id);
+      if (!item) return;
+      document.getElementById('modalTitle').textContent = item.title;
+      document.getElementById('modalYearFormat').textContent = `${item.year} • ${item.format} • ${item.platform||''}`;
+      
+      const castText = formatCast(item.cast);
+      document.getElementById('modalCast').innerHTML = castText ? `👥 <strong>Cast:</strong> ${castText}` : '';
+      document.getElementById('modalSummary').textContent = item.summary || 'No summary available.';
+
+      const fallbackUrl = getPosterFallback(item.title, item.year);
+      const img = document.getElementById('modalImg');
+      img.src = item.cover_url || fallbackUrl;
+      img.onerror = () => { img.src = fallbackUrl; };
+
+      document.getElementById('findPosterBtn').href = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(item.title + ' ' + item.year + ' movie poster')}`;
+      const trailerBox = document.getElementById('modalTrailerContainer');
+      const trailerSearch = `https://www.youtube.com/results?search_query=${encodeURIComponent(item.title + ' ' + item.year + ' trailer')}`;
+      trailerBox.innerHTML = `<a href="${trailerSearch}" target="_blank" class="btn btn-secondary" style="width:100%;">▶ Trailer</a>`;
+
+      document.getElementById('coverModal').classList.remove('hidden');
+    };
+    document.getElementById('modalCloseBtn').onclick = () => document.getElementById('coverModal').classList.add('hidden');
+
     document.getElementById('searchInput').oninput = () => { page = 1; renderFeed(); };
+    document.getElementById('holidaySearchInput').oninput = () => { page = 1; renderFeed(); };
     document.getElementById('sortBy').onchange = () => { page = 1; renderFeed(); };
     document.getElementById('formatFilter').onchange = () => { page = 1; renderFeed(); };
     document.getElementById('collectionFilter').onchange = () => { page = 1; renderFeed(); };
@@ -1208,13 +1374,54 @@
     document.getElementById('dockSettings').onclick = () => { hideAllModals(); document.getElementById('settingsModal').classList.remove('hidden'); };
 
     function hideAllModals() {
-      ['coverModal', 'categoriesModal', 'householdModal', 'settingsModal', 'pickerModal', 'expandModal'].forEach(id => {
+      ['coverModal', 'categoriesModal', 'householdModal', 'settingsModal', 'pickerModal', 'expandModal', 'badgesModal', 'scoreboardModal'].forEach(id => {
         document.getElementById(id).classList.add('hidden');
       });
     }
     document.getElementById('closeCategoriesModal').onclick = hideAllModals;
     document.getElementById('closeHouseholdModal').onclick = hideAllModals;
     document.getElementById('closeSettingsModal').onclick = hideAllModals;
+
+    // Confetti Engine
+    function triggerConfetti() {
+      const canvas = document.getElementById('confettiCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const particles = [];
+      const colors = ['#2D6A4F', '#D4AF37', '#FF6B6B', '#4D96FF', '#6BCB77'];
+
+      for (let i = 0; i < 60; i++) {
+        particles.push({
+          x: canvas.width / 2,
+          y: canvas.height / 2,
+          r: Math.random() * 6 + 4,
+          dx: (Math.random() - 0.5) * 12,
+          dy: (Math.random() - 0.5) * 12 - 3,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          tilt: Math.random() * 10
+        });
+      }
+
+      let frame = 0;
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.x += p.dx;
+          p.y += p.dy;
+          p.dy += 0.2; // gravity
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.fill();
+        });
+        frame++;
+        if (frame < 50) requestAnimationFrame(animate);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      animate();
+    }
 
     // Household Login
     document.getElementById('loginHouseholdBtn').onclick = () => {
@@ -1241,6 +1448,7 @@
     };
 
     // Boot
+    updateProfileUI();
     initFirebase();
     loadCatalog();
   </script>
