@@ -153,6 +153,7 @@
     <!-- Quick Tools Bar -->
     <div class="quick-tools-bar">
       <button class="tool-chip" id="openPickerBtn">🎲 <strong>Pick for Me</strong></button>
+      <button class="tool-chip" id="openExpandBtn">📥 <strong>Expand Database</strong></button>
       <button class="tool-chip" id="pullFresh20Btn">🔥 <strong>Fresh 20 (Last 6 Mos)</strong></button>
       <button class="tool-chip" id="quickDateNightBtn">🍷 <strong>Date Night</strong></button>
     </div>
@@ -219,6 +220,71 @@
       </div>
 
       <button class="btn btn-secondary" id="closePickerBtn" style="margin-top:6px;">Close</button>
+    </div>
+  </div>
+
+  <!-- Expand Database / Pull Titles Engine Modal -->
+  <div id="expandModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <h3 style="color:var(--green-dark);">📥 Expand Database (TMDB)</h3>
+      <p style="font-size:0.78rem; color:var(--muted);">Pull new movies and series into your library. Zero duplicates guaranteed.</p>
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div>
+          <label style="font-size:0.75rem; font-weight:600; color:var(--muted);">TMDB API Key (v3):</label>
+          <input type="text" id="expKeyInput" placeholder="Paste your 32-character key">
+        </div>
+
+        <div class="input-row">
+          <div style="flex:1;">
+            <label style="font-size:0.75rem; font-weight:600; color:var(--muted);">Format:</label>
+            <select id="expFormat">
+              <option value="both">Both Movies & TV</option>
+              <option value="movie">Movies Only</option>
+              <option value="tv">TV Series Only</option>
+            </select>
+          </div>
+          <div style="flex:1;">
+            <label style="font-size:0.75rem; font-weight:600; color:var(--muted);">Batch Size:</label>
+            <select id="expBatchSize">
+              <option value="50">Add 50 Titles</option>
+              <option value="100" selected>Add 100 Titles</option>
+              <option value="200">Add 200 Titles</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="input-row">
+          <div style="flex:1;">
+            <label style="font-size:0.75rem; font-weight:600; color:var(--muted);">Start Year:</label>
+            <input type="number" id="expStartYear" value="2019" min="1950" max="2026">
+          </div>
+          <div style="flex:1;">
+            <label style="font-size:0.75rem; font-weight:600; color:var(--muted);">End Year:</label>
+            <input type="number" id="expEndYear" value="2026" min="1950" max="2026">
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size:0.75rem; font-weight:600; color:var(--muted);">Genre Focus (Horror/War/Western excluded):</label>
+          <select id="expGenre">
+            <option value="all">All Allowed Genres</option>
+            <option value="35">Comedy Only</option>
+            <option value="10751">Family & Kids Only</option>
+            <option value="9648">Mystery & Crime Only</option>
+            <option value="878">Sci-Fi & Fantasy Only</option>
+            <option value="18">Drama & Romance Only</option>
+            <option value="28">Action & Adventure Only</option>
+          </select>
+        </div>
+
+        <div id="expStatus" style="font-size:0.78rem; color:#555; background:#FAF7F2; padding:8px; border-radius:6px; border:1px solid var(--border); min-height:36px; white-space:pre-line;">Ready to pull new titles.</div>
+
+        <button class="btn" id="startExpandBtn" style="padding:10px;">🚀 Pull Titles & Add to Library</button>
+        <button class="btn btn-outline" id="downloadUpdatedCatalogBtn" style="display:none; font-size:0.78rem;">⬇️ Download Updated catalog.json (For GitHub)</button>
+      </div>
+
+      <button class="btn btn-secondary" id="closeExpandBtn" style="margin-top:6px;">Close</button>
     </div>
   </div>
 
@@ -291,6 +357,7 @@
       favorites: {},
       good: {},
       ratings: {},
+      userTitles: [], // Persists dynamically pulled titles across devices
       categories: [
         { key: 'watchlist', label: 'Watchlist' },
         { key: 'kids', label: 'Kids watchlist' },
@@ -342,6 +409,7 @@
         if (parsed.favorites) Object.assign(householdData.favorites, parsed.favorites);
         if (parsed.good) Object.assign(householdData.good, parsed.good);
         if (parsed.ratings) Object.assign(householdData.ratings, parsed.ratings);
+        if (parsed.userTitles) householdData.userTitles = parsed.userTitles;
         if (parsed.categories) householdData.categories = parsed.categories;
       } catch(e) {}
     }
@@ -377,10 +445,10 @@
             householdData.favorites = { ...householdData.favorites, ...(cloud.favorites || {}) };
             householdData.good = { ...householdData.good, ...(cloud.good || {}) };
             householdData.ratings = { ...householdData.ratings, ...(cloud.ratings || {}) };
+            if (cloud.userTitles) householdData.userTitles = cloud.userTitles;
             if (cloud.categories) householdData.categories = cloud.categories;
             localStorage.setItem('ow_local_data', JSON.stringify(householdData));
-            renderNavTabs();
-            renderFeed();
+            loadCatalog(); // Re-merge dynamically pulled user titles
           } else if (localListsCount > 0) {
             syncHouseholdChange();
           }
@@ -406,7 +474,7 @@
 
     // --- 3. AUTO-COMBINE & DEDUPLICATE ---
     async function loadCatalog() {
-      catalog = [];
+      let baseList = [];
       const catalogFiles = ['catalog.json', 'catalog_2.json'];
 
       for (const fileName of catalogFiles) {
@@ -414,14 +482,17 @@
           const res = await fetch(`${fileName}?t=${Date.now()}`);
           if (res.ok) {
             const data = await res.json();
-            if (Array.isArray(data)) catalog.push(...data);
+            if (Array.isArray(data)) baseList.push(...data);
           }
         } catch(e) {}
       }
 
+      // Merge Base Files + Locally/Cloud Pulled Titles
+      const combined = [...(householdData.userTitles || []), ...baseList];
+
       const seenKeys = new Set();
       const seenIds = new Set();
-      catalog = catalog.filter(item => {
+      catalog = combined.filter(item => {
         if (!item || !item.title) return false;
         const titleKey = getItemKey(item);
         if (seenKeys.has(titleKey) || seenIds.has(item.id)) return false;
@@ -435,7 +506,6 @@
       renderFeed();
     }
 
-    // Helper: Analyze genres of Favorites or Good picks
     function getTopGenres(type = 'favorites') {
       const counts = {};
       catalog.forEach(item => {
@@ -519,7 +589,6 @@
         const key = getItemKey(item);
         const isSeenOrPass = assignedLists.includes('seen') || assignedLists.includes('no');
 
-        // HOME: strictly uncategorized
         if (currentFilter === 'uncategorized') {
           if (assignedLists.length > 0) return false;
         } else if (currentFilter === 'favorites') {
@@ -532,9 +601,7 @@
 
         if (format && item.format !== format) return false;
 
-        // SMART COLLECTION FILTERS
         if (coll === 'dateNight') {
-          // Romantic, Comedy, Mystery, Drama, excluding kids/animation
           const g = item.genres || [];
           const isDateGenre = g.some(x => ['Comedy', 'Romance', 'Mystery', 'Drama', 'Adventure'].includes(x));
           if (!isDateGenre || item.audience === 'Little kids' || g.includes('Animation')) return false;
@@ -637,7 +704,7 @@
       `;
     }
 
-    // --- 6. ACTIONS (MULTI-LIST TOGGLE & TITLE-LOCKED) ---
+    // --- 6. ACTIONS ---
     window.toggleList = function(id, listKey) {
       const item = catalog.find(x => x.id === id);
       if (!item) return;
@@ -739,7 +806,7 @@
     };
     document.getElementById('modalCloseBtn').onclick = () => document.getElementById('coverModal').classList.add('hidden');
 
-    // --- 8. SMART PICKER & SURPRISE ME LOGIC ---
+    // --- 8. SMART PICKER & SURPRISE ME ---
     window.openPickerModal = function() {
       hideAllModals();
       document.getElementById('pickerModal').classList.remove('hidden');
@@ -772,7 +839,6 @@
         pool = unwatched.filter(item => (item.genres || []).some(g => topGood.includes(g)));
         reasonText = `👍 Matches movies you marked Good`;
       } else {
-        // Random from Watchlist first, or unwatched
         const watchlistItems = unwatched.filter(item => getAssignedLists(item).includes('watchlist'));
         pool = watchlistItems.length > 0 ? watchlistItems : unwatched;
         reasonText = watchlistItems.length > 0 ? "🎯 From your Watchlist" : "🎲 Random Discovery";
@@ -784,13 +850,11 @@
         return;
       }
 
-      // Pick random title different from last
       let candidates = pool.filter(x => x.id !== lastPickedId);
       if (candidates.length === 0) candidates = pool;
       const pick = candidates[Math.floor(Math.random() * candidates.length)];
       lastPickedId = pick.id;
 
-      // Display pick card
       document.getElementById('pickerTitle').textContent = pick.title;
       document.getElementById('pickerMeta').textContent = `${pick.year} • ${pick.format} • ${(pick.genres||[]).slice(0,3).join(', ')}`;
       document.getElementById('pickerReason').textContent = reasonText;
@@ -813,14 +877,136 @@
     document.getElementById('openPickerBtn').onclick = window.openPickerModal;
     document.getElementById('closePickerBtn').onclick = hideAllModals;
 
-    // Quick Date Night Button in toolbar
     document.getElementById('quickDateNightBtn').onclick = () => {
       document.getElementById('collectionFilter').value = 'dateNight';
       page = 1;
       renderFeed();
     };
 
-    // --- 9. PULL FRESH 20 (LAST 6 MONTHS) ---
+    // --- 9. IN-APP DATABASE EXPANSION ENGINE ---
+    const savedBuilderKey = localStorage.getItem('tmdb_builder_key');
+    if (savedBuilderKey) document.getElementById('expKeyInput').value = savedBuilderKey;
+
+    document.getElementById('openExpandBtn').onclick = () => {
+      hideAllModals();
+      document.getElementById('expandModal').classList.remove('hidden');
+    };
+    document.getElementById('closeExpandBtn').onclick = hideAllModals;
+
+    const TMDB_GENRES = {
+      28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy", 80: "Crime",
+      99: "Documentary", 18: "Drama", 10751: "Family", 14: "Fantasy", 36: "History",
+      10402: "Music", 9648: "Mystery", 10749: "Romance", 878: "Sci-Fi", 53: "Thriller"
+    };
+
+    document.getElementById('startExpandBtn').onclick = async () => {
+      const key = document.getElementById('expKeyInput').value.trim();
+      if (!key) { alert("Please enter your TMDB API Key!"); return; }
+      localStorage.setItem('tmdb_builder_key', key);
+
+      const fmt = document.getElementById('expFormat').value;
+      const targetCount = parseInt(document.getElementById('expBatchSize').value);
+      const startYr = parseInt(document.getElementById('expStartYear').value) || 2019;
+      const endYr = parseInt(document.getElementById('expEndYear').value) || 2026;
+      const genreVal = document.getElementById('expGenre').value;
+      const status = document.getElementById('expStatus');
+      const btn = document.getElementById('startExpandBtn');
+      const dlBtn = document.getElementById('downloadUpdatedCatalogBtn');
+
+      btn.disabled = true;
+      status.innerText = "Querying TMDB for new titles...";
+
+      const seenKeys = new Set(catalog.map(item => getItemKey(item)));
+      let added = [];
+      let nextId = 6000 + Date.now() % 10000;
+      let pageNum = 1;
+
+      // Without Horror (27), War (10752), Western (37)
+      let withoutStr = "27,10752,37";
+      let genreParam = genreVal !== 'all' ? `&with_genres=${genreVal}` : '';
+
+      try {
+        while (added.length < targetCount && pageNum <= 60) {
+          status.innerText = `Fetching page ${pageNum}...\nAdded ${added.length} / ${targetCount} new titles so far.`;
+
+          const fetchMovies = (fmt === 'both' || fmt === 'movie');
+          const fetchTV = (fmt === 'both' || fmt === 'tv');
+
+          const movieUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${key}&without_genres=${withoutStr}${genreParam}&primary_release_date.gte=${startYr}-01-01&primary_release_date.lte=${endYr}-12-31&sort_by=popularity.desc&page=${pageNum}`;
+          const tvUrl = `https://api.themoviedb.org/3/discover/tv?api_key=${key}&without_genres=${withoutStr}${genreParam}&first_air_date.gte=${startYr}-01-01&first_air_date.lte=${endYr}-12-31&sort_by=popularity.desc&page=${pageNum}`;
+
+          const promises = [];
+          if (fetchMovies) promises.push(fetch(movieUrl).then(r=>r.json()).catch(()=>({results:[]})));
+          if (fetchTV) promises.push(fetch(tvUrl).then(r=>r.json()).catch(()=>({results:[]})));
+
+          const results = await Promise.all(promises);
+          let batch = [];
+          if (fetchMovies && results[0]) batch.push(...(results[0].results||[]).map(r=>({...r, _fmt:'Movie'})));
+          if (fetchTV && results[fetchMovies ? 1 : 0]) batch.push(...(results[fetchMovies ? 1 : 0].results||[]).map(r=>({...r, _fmt:'TV'})));
+
+          for (let item of batch) {
+            const gIds = item.genre_ids || [];
+            if (gIds.includes(27) || gIds.includes(10752) || gIds.includes(37)) continue;
+
+            const title = (item.title || item.name || '').trim();
+            const date = item.release_date || item.first_air_date || `${startYr}`;
+            const yr = parseInt(date.slice(0,4)) || startYr;
+            const keyStr = `${title.toLowerCase()}_${yr}`;
+
+            if (seenKeys.has(keyStr)) continue;
+            seenKeys.add(keyStr);
+
+            const g = gIds.map(id => TMDB_GENRES[id]).filter(Boolean);
+            const cover = item.poster_path ? `https://image.tmdb.org/t/p/w300_and_h450_face${item.poster_path}` : '';
+            let audience = "Adults";
+            if (g.includes("Family") || g.includes("Kids")) audience = "Family";
+            else if (item.vote_average >= 7.0) audience = "Teens+";
+
+            const newEntry = {
+              id: nextId++,
+              title: title,
+              year: yr,
+              format: item._fmt,
+              platform: "Theatrical / Streaming",
+              audience: audience,
+              genres: g,
+              summary: item.overview || "Plot summary available on release.",
+              cover_url: cover,
+              shortlist: item.vote_average >= 7.5
+            };
+
+            added.push(newEntry);
+            if (added.length >= targetCount) break;
+          }
+
+          pageNum++;
+        }
+
+        // Add to userTitles (persists across sync and page refreshes)
+        householdData.userTitles = [...(householdData.userTitles || []), ...added];
+        await syncHouseholdChange();
+        await loadCatalog();
+
+        status.innerText = `🎉 Success! Added ${added.length} new titles to your database.\nTotal library count is now ${catalog.length} titles.`;
+
+        // Enable 1-click download for PC users to drop into GitHub if desired
+        dlBtn.style.display = 'block';
+        dlBtn.onclick = () => {
+          const blob = new Blob([JSON.stringify(catalog, null, 2)], { type: "application/json" });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = "catalog.json";
+          a.click();
+        };
+
+      } catch(err) {
+        status.innerText = "Error pulling titles: " + err.message;
+      } finally {
+        btn.disabled = false;
+      }
+    };
+
+    // --- 10. PULL FRESH 20 (LAST 6 MONTHS) ---
     document.getElementById('pullFresh20Btn').onclick = async () => {
       let key = localStorage.getItem('tmdb_builder_key');
       if (!key) {
@@ -835,7 +1021,6 @@
       btn.disabled = true;
 
       try {
-        // Last 6 months query: May 2026 to Nov 2026 (Excluding Horror 27, War 10752, Western 37)
         const mUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${key}&without_genres=27,10752,37&primary_release_date.gte=2026-05-01&primary_release_date.lte=2026-11-09&sort_by=popularity.desc&page=1`;
         const tUrl = `https://api.themoviedb.org/3/discover/tv?api_key=${key}&without_genres=27,10752,37&first_air_date.gte=2026-05-01&first_air_date.lte=2026-11-09&sort_by=popularity.desc&page=1`;
 
@@ -845,12 +1030,6 @@
           ...(tRes.results || []).slice(0, 10).map(r => ({ ...r, _fmt: 'TV' }))
         ];
 
-        const GENRE_MAP = {
-          28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy", 80: "Crime",
-          99: "Documentary", 18: "Drama", 10751: "Family", 14: "Fantasy", 36: "History",
-          10402: "Music", 9648: "Mystery", 10749: "Romance", 878: "Sci-Fi", 53: "Thriller"
-        };
-
         let addedCount = 0;
         let nextId = 5000 + Date.now() % 10000;
 
@@ -859,12 +1038,11 @@
           const year = parseInt((item.release_date || item.first_air_date || '2026').slice(0,4)) || 2026;
           const keyStr = `${title.toLowerCase()}_${year}`;
 
-          // Check if already in catalog
           const exists = catalog.some(x => getItemKey(x) === keyStr);
           if (!exists) {
-            const g = (item.genre_ids || []).map(id => GENRE_MAP[id]).filter(Boolean);
+            const g = (item.genre_ids || []).map(id => TMDB_GENRES[id]).filter(Boolean);
             const cover = item.poster_path ? `https://image.tmdb.org/t/p/w300_and_h450_face${item.poster_path}` : '';
-            catalog.unshift({
+            const newEntry = {
               id: nextId++,
               title: title,
               year: year,
@@ -875,15 +1053,15 @@
               summary: item.overview || "Newly released in the last 6 months.",
               cover_url: cover,
               shortlist: true
-            });
+            };
+            householdData.userTitles = [...(householdData.userTitles || []), newEntry];
             addedCount++;
           }
         });
 
-        alert(`🔥 Successfully added ${addedCount} brand-new releases from the last 6 months!`);
-        currentFilter = 'all';
-        renderNavTabs();
-        renderFeed();
+        await syncHouseholdChange();
+        await loadCatalog();
+        alert(`🔥 Added ${addedCount} brand-new releases from the last 6 months!`);
       } catch(err) {
         alert("Error pulling new releases: " + err.message);
       } finally {
@@ -892,7 +1070,7 @@
       }
     };
 
-    // --- 10. CATEGORIES MANAGER (RENAME & DELETE & ADD) ---
+    // --- 11. CATEGORIES MANAGER ---
     function renderCategoriesManager() {
       const box = document.getElementById('categoriesList');
       box.innerHTML = householdData.categories.map((c, i) => `
@@ -940,7 +1118,7 @@
       renderFeed();
     };
 
-    // --- 11. SHARE & BACKUP ---
+    // --- 12. SHARE & BACKUP ---
     document.getElementById('shareListBtn').onclick = async () => {
       let listTitle = "Our Watchlist";
       const cat = householdData.categories.find(c => c.key === currentFilter);
@@ -1003,11 +1181,11 @@
           if (payload.favorites) Object.assign(householdData.favorites, payload.favorites);
           if (payload.good) Object.assign(householdData.good, payload.good);
           if (payload.ratings) Object.assign(householdData.ratings, payload.ratings);
+          if (payload.userTitles) householdData.userTitles = payload.userTitles;
           if (payload.categories) householdData.categories = payload.categories;
 
           await syncHouseholdChange();
-          renderNavTabs();
-          renderFeed();
+          await loadCatalog();
           alert("🎉 Backup successfully restored! All your lists, notes, and favorites are back.");
           hideAllModals();
         } catch(err) {
@@ -1017,7 +1195,7 @@
       reader.readAsText(file);
     };
 
-    // --- 12. DOCK LISTENERS & SEARCH ---
+    // --- 13. DOCK & SEARCH ---
     document.getElementById('searchInput').oninput = () => { page = 1; renderFeed(); };
     document.getElementById('sortBy').onchange = () => { page = 1; renderFeed(); };
     document.getElementById('formatFilter').onchange = () => { page = 1; renderFeed(); };
@@ -1030,7 +1208,7 @@
     document.getElementById('dockSettings').onclick = () => { hideAllModals(); document.getElementById('settingsModal').classList.remove('hidden'); };
 
     function hideAllModals() {
-      ['coverModal', 'categoriesModal', 'householdModal', 'settingsModal', 'pickerModal'].forEach(id => {
+      ['coverModal', 'categoriesModal', 'householdModal', 'settingsModal', 'pickerModal', 'expandModal'].forEach(id => {
         document.getElementById(id).classList.add('hidden');
       });
     }
