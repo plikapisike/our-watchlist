@@ -38,7 +38,7 @@
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); padding-bottom: 90px; }
     header { background: var(--green-dark); color: #FAF7F2; padding: 12px 16px; position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
     header h1 { font-size: 1.15rem; font-weight: 700; }
-    .header-actions { display: flex; align-items: center; gap: 8px; }
+    .header-actions { display: flex; align-items: center; gap: 6px; }
     .status-pill { font-size: 0.72rem; padding: 3px 8px; border-radius: 12px; background: rgba(255,255,255,0.15); display: flex; align-items: center; gap: 5px; }
     .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #95D5B2; }
     .status-dot.error { background: #FF6B6B; }
@@ -55,6 +55,10 @@
     .btn-secondary { background: var(--badge); color: var(--text); }
     .btn-outline { background: transparent; border: 1px solid var(--green-primary); color: var(--green-primary); }
 
+    .quick-tools-bar { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+    .quick-tools-bar::-webkit-scrollbar { display: none; }
+    .tool-chip { background: #FFFFFF; border: 1px solid var(--border); border-radius: 20px; padding: 5px 10px; font-size: 0.75rem; font-weight: 600; color: var(--green-dark); cursor: pointer; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+
     .catalog-grid { display: flex; flex-direction: column; gap: 12px; padding: 6px 16px; }
     .card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); padding: 12px; display: flex; gap: 12px; box-shadow: var(--shadow); position: relative; }
     .cover-thumb-wrap { width: 90px; min-width: 90px; height: 135px; border-radius: 8px; overflow: hidden; background: var(--badge); cursor: pointer; flex-shrink: 0; }
@@ -63,8 +67,6 @@
     .card-title { font-size: 1rem; font-weight: 700; color: var(--green-dark); line-height: 1.25; }
     .card-meta { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
     .card-cast { font-size: 0.76rem; color: var(--muted); margin: 3px 0 2px 0; line-height: 1.35; }
-    
-    /* Generous, comfortable full plot summaries */
     .card-summary { font-size: 0.82rem; color: #2D3748; margin: 6px 0; line-height: 1.48; word-break: break-word; }
 
     .badge-bar { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0; }
@@ -81,7 +83,7 @@
 
     .list-picker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 8px; }
     .list-chip { background: var(--badge); border: 1px solid transparent; border-radius: 6px; padding: 6px 2px; font-size: 0.68rem; font-weight: 600; text-align: center; cursor: pointer; }
-    .list-chip.selected { background: var(--green-primary); color: #FFFFFF; }
+    .list-chip.selected { background: var(--green-primary); color: #FFFFFF; font-weight: 700; }
 
     .note-row { margin-top: 6px; display: flex; gap: 6px; }
     .note-input { font-size: 0.78rem; padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; }
@@ -125,6 +127,7 @@
         <option value="title_asc">Title (A-Z)</option>
       </select>
     </div>
+    
     <div class="input-row">
       <select id="formatFilter" style="flex:1;">
         <option value="">All Formats</option>
@@ -133,6 +136,9 @@
       </select>
       <select id="collectionFilter" style="flex:1;">
         <option value="">All Collections</option>
+        <option value="dateNight">🍷 Date Night Picks</option>
+        <option value="basedOnFavs">💡 Like My Favorites</option>
+        <option value="basedOnGood">👍 Like My Good Movies</option>
         <option value="favorites">❤️ Favorites</option>
         <option value="good">👍 Good Movies & Shows</option>
         <option value="high_rated">⭐ Rated 4+ Stars</option>
@@ -142,6 +148,13 @@
         <option value="renovation">Home & Renovation</option>
         <option value="2019-2026">2019–2026 Releases</option>
       </select>
+    </div>
+
+    <!-- Quick Tools Bar -->
+    <div class="quick-tools-bar">
+      <button class="tool-chip" id="openPickerBtn">🎲 <strong>Pick for Me</strong></button>
+      <button class="tool-chip" id="pullFresh20Btn">🔥 <strong>Fresh 20 (Last 6 Mos)</strong></button>
+      <button class="tool-chip" id="quickDateNightBtn">🍷 <strong>Date Night</strong></button>
     </div>
   </section>
 
@@ -176,11 +189,44 @@
     </div>
   </div>
 
-  <!-- Manage Categories Modal (With Rename & Add) -->
+  <!-- Smart Pick & Surprise Me Modal -->
+  <div id="pickerModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <h3 style="color:var(--green-dark);">🎲 Smart Picker & Recommendations</h3>
+      <p style="font-size:0.78rem; color:var(--muted);">Select a mood or let the algorithm suggest what to watch next:</p>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:10px;">
+        <button class="btn btn-secondary" onclick="window.spinPicker('random')">🎲 Surprise Me</button>
+        <button class="btn btn-secondary" onclick="window.spinPicker('dateNight')">🍷 Date Night</button>
+        <button class="btn btn-secondary" onclick="window.spinPicker('favorites')">💡 Like Favorites</button>
+        <button class="btn btn-secondary" onclick="window.spinPicker('good')">👍 Like Good List</button>
+      </div>
+
+      <div id="pickerResultCard" style="display:none; background:#FAF7F2; border:1px solid var(--border); border-radius:10px; padding:12px;">
+        <div style="display:flex; gap:10px;">
+          <img id="pickerImg" style="width:70px; height:105px; object-fit:cover; border-radius:6px;" alt="Cover">
+          <div>
+            <h4 id="pickerTitle" style="color:var(--green-dark); font-size:0.95rem;"></h4>
+            <div id="pickerMeta" style="font-size:0.74rem; color:var(--muted); margin-top:2px;"></div>
+            <div id="pickerReason" style="font-size:0.75rem; background:var(--green-light); color:var(--green-dark); padding:2px 6px; border-radius:4px; display:inline-block; margin-top:4px; font-weight:600;"></div>
+          </div>
+        </div>
+        <p id="pickerSummary" style="font-size:0.78rem; color:#2D3748; margin-top:8px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;"></p>
+        <div style="display:flex; gap:6px; margin-top:10px;">
+          <button class="btn" id="pickerOpenBtn" style="flex:1;">View Details 🎬</button>
+          <button class="btn btn-outline" id="pickerSpinAgainBtn" style="flex:1;">Spin Again 🔄</button>
+        </div>
+      </div>
+
+      <button class="btn btn-secondary" id="closePickerBtn" style="margin-top:6px;">Close</button>
+    </div>
+  </div>
+
+  <!-- Manage Categories Modal -->
   <div id="categoriesModal" class="modal-backdrop hidden">
     <div class="modal-box">
       <h3 style="color:var(--green-dark);">Manage List Categories</h3>
-      <p style="font-size:0.78rem; color:var(--muted);">Rename or remove any list. Renaming keeps all your assigned movies intact!</p>
+      <p style="font-size:0.78rem; color:var(--muted);">Rename or delete lists. Movies can be in multiple lists simultaneously!</p>
       <div id="categoriesList" style="display:flex; flex-direction:column; gap:8px;"></div>
       
       <div style="border-top:1px solid var(--border); padding-top:12px; margin-top:10px;">
@@ -209,7 +255,7 @@
     </div>
   </div>
 
-  <!-- Settings Modal (Export & Import Backups) -->
+  <!-- Settings Modal -->
   <div id="settingsModal" class="modal-backdrop hidden">
     <div class="modal-box">
       <h3>Settings & Backup Recovery</h3>
@@ -257,24 +303,36 @@
     };
 
     let activeHousehold = localStorage.getItem('ow_household_user') || '';
-    let currentFilter = localStorage.getItem('ow_active_tab') || 'all';
+    let currentFilter = localStorage.getItem('ow_active_tab') || 'uncategorized';
     let pageSize = 25;
     let page = 1;
     let db = null;
+    let currentPickerMode = 'random';
+    let lastPickedId = null;
 
-    // Stable title identifier that never changes even if IDs are renumbered
     function getItemKey(item) {
       if (!item) return '';
       return `${(item.title || '').trim().toLowerCase()}_${item.year}`;
     }
 
-    // Dynamic handsome poster fallback for any movie missing cover art
     function getPosterFallback(title, year) {
       const clean = (title || 'Movie').replace(/[<>&"]/g, '');
       return `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="450" viewBox="0 0 300 450"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%231B4332"/><stop offset="100%" stop-color="%232D6A4F"/></linearGradient></defs><rect width="300" height="450" fill="url(%23g)" rx="8"/><text x="150" y="200" fill="%23FAF7F2" font-family="system-ui,sans-serif" font-size="20" font-weight="bold" text-anchor="middle">${clean.slice(0, 22)}</text><text x="150" y="235" fill="%2395D5B2" font-family="system-ui,sans-serif" font-size="14" text-anchor="middle">${year || ''}</text><text x="150" y="280" font-size="30" text-anchor="middle">🎬</text></svg>`;
     }
 
-    // --- 1. LOAD LOCAL DATA IMMEDIATELY ---
+    function getAssignedLists(item) {
+      const key = getItemKey(item);
+      const raw = householdData.lists[key] || householdData.lists[item.id];
+      if (!raw) return [];
+      if (Array.isArray(raw)) return raw;
+      if (typeof raw === 'string') {
+        if (raw === 'uncategorized') return [];
+        return [raw];
+      }
+      return [];
+    }
+
+    // --- 1. LOAD LOCAL DATA ---
     const savedLocal = localStorage.getItem('ow_local_data');
     if (savedLocal) {
       try {
@@ -288,7 +346,7 @@
       } catch(e) {}
     }
 
-    // --- 2. FIREBASE REALTIME SYNC (ANTI-WIPE PROTECTED) ---
+    // --- 2. FIREBASE SYNC ---
     function initFirebase() {
       const cfg = localStorage.getItem('ow_firebase_config');
       if (!cfg || !window.FB) return;
@@ -313,7 +371,6 @@
           const cloudListsCount = Object.keys(cloud.lists || {}).length;
           const localListsCount = Object.keys(householdData.lists || {}).length;
 
-          // Never let an empty cloud document overwrite populated local choices
           if (cloudListsCount > 0) {
             householdData.lists = { ...householdData.lists, ...cloud.lists };
             householdData.notes = { ...householdData.notes, ...(cloud.notes || {}) };
@@ -347,7 +404,7 @@
       }
     }
 
-    // --- 3. AUTO-COMBINE & DEDUPLICATE (WITH CACHE BUSTER) ---
+    // --- 3. AUTO-COMBINE & DEDUPLICATE ---
     async function loadCatalog() {
       catalog = [];
       const catalogFiles = ['catalog.json', 'catalog_2.json'];
@@ -362,7 +419,6 @@
         } catch(e) {}
       }
 
-      // Deduplicate by Title + Year AND by ID
       const seenKeys = new Set();
       const seenIds = new Set();
       catalog = catalog.filter(item => {
@@ -379,9 +435,19 @@
       renderFeed();
     }
 
-    function getAssignedList(item) {
-      const key = getItemKey(item);
-      return householdData.lists[key] || householdData.lists[item.id] || 'uncategorized';
+    // Helper: Analyze genres of Favorites or Good picks
+    function getTopGenres(type = 'favorites') {
+      const counts = {};
+      catalog.forEach(item => {
+        const key = getItemKey(item);
+        const match = type === 'favorites' 
+          ? (householdData.favorites[key] || householdData.favorites[item.id])
+          : (householdData.good[key] || householdData.good[item.id]);
+        if (match && item.genres) {
+          item.genres.forEach(g => counts[g] = (counts[g] || 0) + 1);
+        }
+      });
+      return Object.entries(counts).sort((a,b) => b[1] - a[1]).map(e => e[0]);
     }
 
     // --- 4. NAVIGATION TABS ---
@@ -391,16 +457,24 @@
       householdData.categories.forEach(c => counts[c.key] = 0);
 
       catalog.forEach(item => {
-        const assigned = getAssignedList(item);
+        const assignedLists = getAssignedLists(item);
         const key = getItemKey(item);
-        counts[assigned] = (counts[assigned] || 0) + 1;
+
+        if (assignedLists.length === 0) {
+          counts.uncategorized++;
+        } else {
+          assignedLists.forEach(catKey => {
+            if (counts[catKey] !== undefined) counts[catKey]++;
+          });
+        }
+
         if (householdData.favorites[key] || householdData.favorites[item.id]) counts.favorites++;
         if (householdData.good[key] || householdData.good[item.id]) counts.good++;
       });
 
       let tabsHtml = `
+        <button class="nav-tab ${currentFilter==='uncategorized'?'active':''}" data-list="uncategorized">🏠 Home (${counts.uncategorized})</button>
         <button class="nav-tab ${currentFilter==='all'?'active':''}" data-list="all">📚 All Titles (${counts.all})</button>
-        <button class="nav-tab ${currentFilter==='uncategorized'?'active':''}" data-list="uncategorized">📥 Inbox (${counts.uncategorized})</button>
         <button class="nav-tab ${currentFilter==='favorites'?'active':''}" data-list="favorites">❤️ Favorites (${counts.favorites})</button>
         <button class="nav-tab ${currentFilter==='good'?'active':''}" data-list="good">👍 Good (${counts.good})</button>
       `;
@@ -437,30 +511,45 @@
       const coll = document.getElementById('collectionFilter').value;
       const sort = document.getElementById('sortBy').value;
 
-      let filtered = catalog.filter(item => {
-        const assigned = getAssignedList(item);
-        const key = getItemKey(item);
+      const topFavGenres = (coll === 'basedOnFavs') ? getTopGenres('favorites').slice(0, 3) : [];
+      const topGoodGenres = (coll === 'basedOnGood') ? getTopGenres('good').slice(0, 3) : [];
 
+      let filtered = catalog.filter(item => {
+        const assignedLists = getAssignedLists(item);
+        const key = getItemKey(item);
+        const isSeenOrPass = assignedLists.includes('seen') || assignedLists.includes('no');
+
+        // HOME: strictly uncategorized
         if (currentFilter === 'uncategorized') {
-          if (assigned !== 'uncategorized') return false;
+          if (assignedLists.length > 0) return false;
         } else if (currentFilter === 'favorites') {
           if (!householdData.favorites[key] && !householdData.favorites[item.id]) return false;
         } else if (currentFilter === 'good') {
           if (!householdData.good[key] && !householdData.good[item.id]) return false;
         } else if (currentFilter !== 'all') {
-          if (assigned !== currentFilter) return false;
+          if (!assignedLists.includes(currentFilter)) return false;
         }
 
         if (format && item.format !== format) return false;
 
-        if (coll === 'favorites' && !householdData.favorites[key] && !householdData.favorites[item.id]) return false;
-        if (coll === 'good' && !householdData.good[key] && !householdData.good[item.id]) return false;
-        if (coll === 'high_rated' && (householdData.ratings[key] || householdData.ratings[item.id] || 0) < 4) return false;
-        if (coll === 'startHere' && !item.shortlist) return false;
-        if (coll === 'family' && item.audience !== 'Family') return false;
-        if (coll === 'parenting' && !item.parentingComedy) return false;
-        if (coll === 'renovation' && !item.renovation) return false;
-        if (coll === '2019-2026' && !(item.year >= 2019 && item.year <= 2026)) return false;
+        // SMART COLLECTION FILTERS
+        if (coll === 'dateNight') {
+          // Romantic, Comedy, Mystery, Drama, excluding kids/animation
+          const g = item.genres || [];
+          const isDateGenre = g.some(x => ['Comedy', 'Romance', 'Mystery', 'Drama', 'Adventure'].includes(x));
+          if (!isDateGenre || item.audience === 'Little kids' || g.includes('Animation')) return false;
+        } else if (coll === 'basedOnFavs') {
+          if (isSeenOrPass || !(item.genres || []).some(x => topFavGenres.includes(x))) return false;
+        } else if (coll === 'basedOnGood') {
+          if (isSeenOrPass || !(item.genres || []).some(x => topGoodGenres.includes(x))) return false;
+        } else if (coll === 'favorites' && !householdData.favorites[key] && !householdData.favorites[item.id]) return false;
+        else if (coll === 'good' && !householdData.good[key] && !householdData.good[item.id]) return false;
+        else if (coll === 'high_rated' && (householdData.ratings[key] || householdData.ratings[item.id] || 0) < 4) return false;
+        else if (coll === 'startHere' && !item.shortlist) return false;
+        else if (coll === 'family' && item.audience !== 'Family') return false;
+        else if (coll === 'parenting' && !item.parentingComedy) return false;
+        else if (coll === 'renovation' && !item.renovation) return false;
+        else if (coll === '2019-2026' && !(item.year >= 2019 && item.year <= 2026)) return false;
 
         if (search) {
           const target = `${item.title} ${item.cast||''} ${item.summary||''}`.toLowerCase();
@@ -486,7 +575,8 @@
     }
 
     function createCardHTML(item) {
-      const assigned = getAssignedList(item);
+      const assignedLists = getAssignedLists(item);
+      const isUncategorized = (assignedLists.length === 0);
       const key = getItemKey(item);
       const isFav = !!(householdData.favorites[key] || householdData.favorites[item.id]);
       const isGood = !!(householdData.good[key] || householdData.good[item.id]);
@@ -494,9 +584,10 @@
       const note = householdData.notes[key] || householdData.notes[item.id] || '';
       const castText = formatCast(item.cast);
 
-      const chips = householdData.categories.map(c => `
-        <button class="list-chip ${assigned === c.key ? 'selected' : ''}" onclick="window.setList(${item.id}, '${c.key}')">${c.label}</button>
-      `).join('');
+      const chips = householdData.categories.map(c => {
+        const isSelected = assignedLists.includes(c.key);
+        return `<button class="list-chip ${isSelected ? 'selected' : ''}" onclick="window.toggleList(${item.id}, '${c.key}')">${isSelected ? '✓ ' : ''}${c.label}</button>`;
+      }).join('');
 
       let stars = '';
       for (let i = 1; i <= 5; i++) {
@@ -523,7 +614,6 @@
                 ${(item.genres||[]).map(g => `<span class="badge">${g}</span>`).join('')}
               </div>
 
-              <!-- Full plot summary with generous line-height -->
               <p class="card-summary">${item.summary || 'No summary available.'}</p>
             </div>
 
@@ -536,7 +626,7 @@
             <div>
               <div class="list-picker-grid">
                 ${chips}
-                <button class="list-chip ${assigned === 'uncategorized' ? 'selected' : ''}" onclick="window.setList(${item.id}, 'uncategorized')">Reset</button>
+                <button class="list-chip ${isUncategorized ? 'selected' : ''}" onclick="window.toggleList(${item.id}, 'clear')">↺ Reset</button>
               </div>
               <div class="note-row">
                 <input class="note-input" type="text" placeholder="Add note..." value="${note}" onchange="window.saveNote(${item.id}, this.value)">
@@ -547,17 +637,30 @@
       `;
     }
 
-    // --- 6. ACTIONS (TITLE-LOCKED) ---
-    window.setList = function(id, listKey) {
+    // --- 6. ACTIONS (MULTI-LIST TOGGLE & TITLE-LOCKED) ---
+    window.toggleList = function(id, listKey) {
       const item = catalog.find(x => x.id === id);
+      if (!item) return;
       const titleKey = getItemKey(item);
+      let current = [...getAssignedLists(item)];
 
-      if (listKey === 'uncategorized') {
+      if (listKey === 'clear' || listKey === 'uncategorized') {
+        current = [];
+      } else {
+        const idx = current.indexOf(listKey);
+        if (idx > -1) {
+          current.splice(idx, 1);
+        } else {
+          current.push(listKey);
+        }
+      }
+
+      if (current.length === 0) {
         delete householdData.lists[id];
         if (titleKey) delete householdData.lists[titleKey];
       } else {
-        householdData.lists[id] = listKey;
-        if (titleKey) householdData.lists[titleKey] = listKey;
+        householdData.lists[id] = current;
+        if (titleKey) householdData.lists[titleKey] = current;
       }
 
       syncHouseholdChange();
@@ -626,7 +729,6 @@
       img.src = item.cover_url || fallbackUrl;
       img.onerror = () => { img.src = fallbackUrl; };
 
-      // Direct search link for high-res artwork if missing
       document.getElementById('findPosterBtn').href = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(item.title + ' ' + item.year + ' movie poster')}`;
 
       const trailerBox = document.getElementById('modalTrailerContainer');
@@ -637,28 +739,160 @@
     };
     document.getElementById('modalCloseBtn').onclick = () => document.getElementById('coverModal').classList.add('hidden');
 
-    document.getElementById('searchInput').oninput = () => { page = 1; renderFeed(); };
-    document.getElementById('sortBy').onchange = () => { page = 1; renderFeed(); };
-    document.getElementById('formatFilter').onchange = () => { page = 1; renderFeed(); };
-    document.getElementById('collectionFilter').onchange = () => { page = 1; renderFeed(); };
-    document.getElementById('loadMoreBtn').onclick = () => { page++; renderFeed(); };
+    // --- 8. SMART PICKER & SURPRISE ME LOGIC ---
+    window.openPickerModal = function() {
+      hideAllModals();
+      document.getElementById('pickerModal').classList.remove('hidden');
+      window.spinPicker('random');
+    };
 
-    // Dock listeners
-    document.getElementById('dockDiscover').onclick = hideAllModals;
-    document.getElementById('dockCategories').onclick = () => { hideAllModals(); renderCategoriesManager(); document.getElementById('categoriesModal').classList.remove('hidden'); };
-    document.getElementById('dockHousehold').onclick = () => { hideAllModals(); document.getElementById('householdModal').classList.remove('hidden'); };
-    document.getElementById('dockSettings').onclick = () => { hideAllModals(); document.getElementById('settingsModal').classList.remove('hidden'); };
-
-    function hideAllModals() {
-      ['coverModal', 'categoriesModal', 'householdModal', 'settingsModal'].forEach(id => {
-        document.getElementById(id).classList.add('hidden');
+    window.spinPicker = function(mode = 'random') {
+      currentPickerMode = mode;
+      const unwatched = catalog.filter(item => {
+        const assigned = getAssignedLists(item);
+        return !assigned.includes('seen') && !assigned.includes('no');
       });
-    }
-    document.getElementById('closeCategoriesModal').onclick = hideAllModals;
-    document.getElementById('closeHouseholdModal').onclick = hideAllModals;
-    document.getElementById('closeSettingsModal').onclick = hideAllModals;
 
-    // --- 8. CATEGORIES MANAGER (RENAME & DELETE & ADD) ---
+      let pool = [];
+      let reasonText = "Surprise Pick!";
+
+      if (mode === 'dateNight') {
+        pool = unwatched.filter(item => {
+          const g = item.genres || [];
+          return g.some(x => ['Comedy', 'Romance', 'Mystery', 'Drama', 'Adventure'].includes(x)) &&
+                 item.audience !== 'Little kids' && !g.includes('Animation');
+        });
+        reasonText = "🍷 Perfect for Date Night";
+      } else if (mode === 'favorites') {
+        const topFavs = getTopGenres('favorites').slice(0, 3);
+        pool = unwatched.filter(item => (item.genres || []).some(g => topFavs.includes(g)));
+        reasonText = `💡 Matches your Favorite genres: ${topFavs.slice(0,2).join(', ')}`;
+      } else if (mode === 'good') {
+        const topGood = getTopGenres('good').slice(0, 3);
+        pool = unwatched.filter(item => (item.genres || []).some(g => topGood.includes(g)));
+        reasonText = `👍 Matches movies you marked Good`;
+      } else {
+        // Random from Watchlist first, or unwatched
+        const watchlistItems = unwatched.filter(item => getAssignedLists(item).includes('watchlist'));
+        pool = watchlistItems.length > 0 ? watchlistItems : unwatched;
+        reasonText = watchlistItems.length > 0 ? "🎯 From your Watchlist" : "🎲 Random Discovery";
+      }
+
+      if (pool.length === 0) pool = unwatched;
+      if (pool.length === 0) {
+        alert("No titles match this recommendation criteria!");
+        return;
+      }
+
+      // Pick random title different from last
+      let candidates = pool.filter(x => x.id !== lastPickedId);
+      if (candidates.length === 0) candidates = pool;
+      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      lastPickedId = pick.id;
+
+      // Display pick card
+      document.getElementById('pickerTitle').textContent = pick.title;
+      document.getElementById('pickerMeta').textContent = `${pick.year} • ${pick.format} • ${(pick.genres||[]).slice(0,3).join(', ')}`;
+      document.getElementById('pickerReason').textContent = reasonText;
+      document.getElementById('pickerSummary').textContent = pick.summary || 'No plot summary available.';
+      
+      const fallbackUrl = getPosterFallback(pick.title, pick.year);
+      const img = document.getElementById('pickerImg');
+      img.src = pick.cover_url || fallbackUrl;
+      img.onerror = () => { img.src = fallbackUrl; };
+
+      document.getElementById('pickerOpenBtn').onclick = () => {
+        hideAllModals();
+        window.openModal(pick.id);
+      };
+
+      document.getElementById('pickerResultCard').style.display = 'block';
+    };
+
+    document.getElementById('pickerSpinAgainBtn').onclick = () => window.spinPicker(currentPickerMode);
+    document.getElementById('openPickerBtn').onclick = window.openPickerModal;
+    document.getElementById('closePickerBtn').onclick = hideAllModals;
+
+    // Quick Date Night Button in toolbar
+    document.getElementById('quickDateNightBtn').onclick = () => {
+      document.getElementById('collectionFilter').value = 'dateNight';
+      page = 1;
+      renderFeed();
+    };
+
+    // --- 9. PULL FRESH 20 (LAST 6 MONTHS) ---
+    document.getElementById('pullFresh20Btn').onclick = async () => {
+      let key = localStorage.getItem('tmdb_builder_key');
+      if (!key) {
+        key = prompt("Enter your TMDB API Key (v3) to pull the newest releases:");
+        if (!key || !key.trim()) return;
+        key = key.trim();
+        localStorage.setItem('tmdb_builder_key', key);
+      }
+
+      const btn = document.getElementById('pullFresh20Btn');
+      btn.innerText = "⏳ Pulling...";
+      btn.disabled = true;
+
+      try {
+        // Last 6 months query: May 2026 to Nov 2026 (Excluding Horror 27, War 10752, Western 37)
+        const mUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${key}&without_genres=27,10752,37&primary_release_date.gte=2026-05-01&primary_release_date.lte=2026-11-09&sort_by=popularity.desc&page=1`;
+        const tUrl = `https://api.themoviedb.org/3/discover/tv?api_key=${key}&without_genres=27,10752,37&first_air_date.gte=2026-05-01&first_air_date.lte=2026-11-09&sort_by=popularity.desc&page=1`;
+
+        const [mRes, tRes] = await Promise.all([fetch(mUrl).then(r=>r.json()), fetch(tUrl).then(r=>r.json())]);
+        const combined = [
+          ...(mRes.results || []).slice(0, 10).map(r => ({ ...r, _fmt: 'Movie' })),
+          ...(tRes.results || []).slice(0, 10).map(r => ({ ...r, _fmt: 'TV' }))
+        ];
+
+        const GENRE_MAP = {
+          28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy", 80: "Crime",
+          99: "Documentary", 18: "Drama", 10751: "Family", 14: "Fantasy", 36: "History",
+          10402: "Music", 9648: "Mystery", 10749: "Romance", 878: "Sci-Fi", 53: "Thriller"
+        };
+
+        let addedCount = 0;
+        let nextId = 5000 + Date.now() % 10000;
+
+        combined.forEach(item => {
+          const title = (item.title || item.name || '').trim();
+          const year = parseInt((item.release_date || item.first_air_date || '2026').slice(0,4)) || 2026;
+          const keyStr = `${title.toLowerCase()}_${year}`;
+
+          // Check if already in catalog
+          const exists = catalog.some(x => getItemKey(x) === keyStr);
+          if (!exists) {
+            const g = (item.genre_ids || []).map(id => GENRE_MAP[id]).filter(Boolean);
+            const cover = item.poster_path ? `https://image.tmdb.org/t/p/w300_and_h450_face${item.poster_path}` : '';
+            catalog.unshift({
+              id: nextId++,
+              title: title,
+              year: year,
+              format: item._fmt,
+              platform: "Theatrical / Streaming",
+              audience: g.includes("Family") ? "Family" : "Adults",
+              genres: g,
+              summary: item.overview || "Newly released in the last 6 months.",
+              cover_url: cover,
+              shortlist: true
+            });
+            addedCount++;
+          }
+        });
+
+        alert(`🔥 Successfully added ${addedCount} brand-new releases from the last 6 months!`);
+        currentFilter = 'all';
+        renderNavTabs();
+        renderFeed();
+      } catch(err) {
+        alert("Error pulling new releases: " + err.message);
+      } finally {
+        btn.innerText = "🔥 Fresh 20 (Last 6 Mos)";
+        btn.disabled = false;
+      }
+    };
+
+    // --- 10. CATEGORIES MANAGER (RENAME & DELETE & ADD) ---
     function renderCategoriesManager() {
       const box = document.getElementById('categoriesList');
       box.innerHTML = householdData.categories.map((c, i) => `
@@ -706,21 +940,23 @@
       renderFeed();
     };
 
-    // --- 9. SHARE LISTS BUTTON ---
+    // --- 11. SHARE & BACKUP ---
     document.getElementById('shareListBtn').onclick = async () => {
       let listTitle = "Our Watchlist";
       const cat = householdData.categories.find(c => c.key === currentFilter);
       if (cat) listTitle = cat.label;
       else if (currentFilter === 'favorites') listTitle = "Favorites";
       else if (currentFilter === 'good') listTitle = "Good Recommendations";
+      else if (currentFilter === 'uncategorized') listTitle = "Uncategorized Titles";
 
       const matchedTitles = catalog.filter(item => {
-        const assigned = getAssignedList(item);
+        const assigned = getAssignedLists(item);
         const key = getItemKey(item);
         if (currentFilter === 'all') return true;
+        if (currentFilter === 'uncategorized') return assigned.length === 0;
         if (currentFilter === 'favorites') return (householdData.favorites[key] || householdData.favorites[item.id]);
         if (currentFilter === 'good') return (householdData.good[key] || householdData.good[item.id]);
-        return assigned === currentFilter;
+        return assigned.includes(currentFilter);
       }).map(t => `- ${t.title} (${t.year})`).slice(0, 50);
 
       const shareText = `🍿 ${listTitle} (${matchedTitles.length} titles):\n\n${matchedTitles.join('\n')}\n\nView our catalog: https://plikapisike.github.io/our-watchlist/`;
@@ -736,7 +972,6 @@
       }
     };
 
-    // --- 10. BACKUP EXPORT & IMPORT ---
     document.getElementById('exportBackupBtn').onclick = () => {
       const backupData = {
         app: "Our Watchlist",
@@ -761,9 +996,7 @@
           const imported = JSON.parse(evt.target.result);
           const payload = imported.data || imported;
           
-          if (!payload.lists && !payload.categories) {
-            throw new Error("Invalid backup file structure.");
-          }
+          if (!payload.lists && !payload.categories) throw new Error("Invalid backup structure.");
 
           if (payload.lists) Object.assign(householdData.lists, payload.lists);
           if (payload.notes) Object.assign(householdData.notes, payload.notes);
@@ -784,7 +1017,28 @@
       reader.readAsText(file);
     };
 
-    // --- 11. HOUSEHOLD & AUTH ---
+    // --- 12. DOCK LISTENERS & SEARCH ---
+    document.getElementById('searchInput').oninput = () => { page = 1; renderFeed(); };
+    document.getElementById('sortBy').onchange = () => { page = 1; renderFeed(); };
+    document.getElementById('formatFilter').onchange = () => { page = 1; renderFeed(); };
+    document.getElementById('collectionFilter').onchange = () => { page = 1; renderFeed(); };
+    document.getElementById('loadMoreBtn').onclick = () => { page++; renderFeed(); };
+
+    document.getElementById('dockDiscover').onclick = hideAllModals;
+    document.getElementById('dockCategories').onclick = () => { hideAllModals(); renderCategoriesManager(); document.getElementById('categoriesModal').classList.remove('hidden'); };
+    document.getElementById('dockHousehold').onclick = () => { hideAllModals(); document.getElementById('householdModal').classList.remove('hidden'); };
+    document.getElementById('dockSettings').onclick = () => { hideAllModals(); document.getElementById('settingsModal').classList.remove('hidden'); };
+
+    function hideAllModals() {
+      ['coverModal', 'categoriesModal', 'householdModal', 'settingsModal', 'pickerModal'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+    }
+    document.getElementById('closeCategoriesModal').onclick = hideAllModals;
+    document.getElementById('closeHouseholdModal').onclick = hideAllModals;
+    document.getElementById('closeSettingsModal').onclick = hideAllModals;
+
+    // Household Login
     document.getElementById('loginHouseholdBtn').onclick = () => {
       const u = document.getElementById('userHouseholdInput').value.trim();
       const p = document.getElementById('passHouseholdInput').value.trim();
