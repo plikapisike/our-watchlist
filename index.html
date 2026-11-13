@@ -515,62 +515,105 @@
     };
 
     // --- 2. FIREBASE REALTIME SYNC ---
+     const BUILTIN_FIREBASE_CONFIG = {
+      apiKey: "AIzaSyAXPjZ14LAHDTFsgH7moS-O9ri0Kv04y08",
+      authDomain: "our-watchlist-cb8d3.firebaseapp.com",
+      projectId: "our-watchlist-cb8d3",
+      storageBucket: "our-watchlist-cb8d3.firebasestorage.app",
+      messagingSenderId: "235209590075",
+      appId: "1:235209590075:web:a916e80cd889512f05e31e"
+    };
+
     function initFirebase() {
-      const cfg = localStorage.getItem('ow_firebase_config');
-      if (!cfg || !window.FB) return;
+      if (!window.FB) return;
       try {
-        const parsed = JSON.parse(cfg);
-        const app = window.FB.initializeApp(parsed);
+        const app = window.FB.initializeApp(BUILTIN_FIREBASE_CONFIG);
         db = window.FB.getFirestore(app);
-
-        if (activeHousehold) {
-          connectToCloudHousehold(activeHousehold);
-        }
-      } catch(e) { console.error("Firebase init:", e); }
+        
+        // Auto-connect to 32birch
+        connectHousehold("32birch", "auto", false);
+      } catch (err) {
+        console.error("Firebase init error:", err);
+      }
     }
-    window.addEventListener('firebase-sdk-ready', initFirebase);
+    window.addEventListener('firebase-ready', initFirebase);
 
-    function connectToCloudHousehold(username) {
-      if (!db || !username) return;
-      const hhDocRef = window.FB.doc(db, "households", username);
-      window.FB.onSnapshot(hhDocRef, (snap) => {
-        if (snap.exists()) {
-          const cloud = snap.data();
-          const cloudListsCount = Object.keys(cloud.lists || {}).length;
-          const localListsCount = Object.keys(householdData.lists || {}).length;
+    async function connectHousehold(username, password, showPrompt = true) {
+      username = username.toLowerCase().trim();
+      if (!db) return;
+      
+      document.getElementById('syncText').textContent = 'Connecting...';
+      try {
+        const hhDocRef = window.FB.doc(db, "households", username);
+        
+        // Listen to live updates from the shared cloud
+        window.FB.onSnapshot(hhDocRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const val = docSnap.data();
+            
+            // Merge remote state
+            householdData.lists = val.lists || {};
+            householdData.notes = val.notes || {};
+            householdData.favorites = val.favorites || {};
+            householdData.good = val.good || {};
+            householdData.ratings = val.ratings || {};
+            householdData.userTitles = val.userTitles || [];
+            householdData.categories = (val.categories && val.categories.length) ? val.categories : [...DEFAULT_CATEGORIES];
+            householdData.excludedGenres = val.excludedGenres || ["War", "Western"];
+            
+            if (val.hideCompleted !== undefined) {
+              householdData.hideCompleted = val.hideCompleted;
+              document.getElementById('hideCompleted').checked = val.hideCompleted;
+            }
 
-          if (cloudListsCount > 0) {
-            householdData.lists = { ...householdData.lists, ...cloud.lists };
-            householdData.notes = { ...householdData.notes, ...(cloud.notes || {}) };
-            householdData.favorites = { ...householdData.favorites, ...(cloud.favorites || {}) };
-            householdData.good = { ...householdData.good, ...(cloud.good || {}) };
-            householdData.ratings = { ...householdData.ratings, ...(cloud.ratings || {}) };
-            householdData.whoPicked = { ...householdData.whoPicked, ...(cloud.whoPicked || {}) };
-            if (cloud.gamification) householdData.gamification = cloud.gamification;
-            if (cloud.userTitles) householdData.userTitles = cloud.userTitles;
-            if (cloud.categories) householdData.categories = cloud.categories;
-            localStorage.setItem('ow_local_data', JSON.stringify(householdData));
-            updateProfileUI();
-            loadCatalog();
-          } else if (localListsCount > 0) {
-            syncHouseholdChange();
+            activeHousehold = username;
+            document.getElementById('householdDisplay').textContent = `Synced: ${username}`;
+            document.getElementById('syncDot').classList.remove('error');
+            document.getElementById('syncText').textContent = 'Connected';
+            
+            updateExcludedBadge();
+            renderNavTabs();
+            renderFeed();
+          } else {
+            // First time setup - push current local state to cloud
+            pushHouseholdSync(true);
           }
-        }
-      });
-    }
-
-    async function syncHouseholdChange() {
-      localStorage.setItem('ow_local_data', JSON.stringify(householdData));
-      updateProfileUI();
-
-      if (db && activeHousehold) {
-        try {
-          const hhDocRef = window.FB.doc(db, "households", activeHousehold);
-          await window.FB.setDoc(hhDocRef, householdData, { merge: true });
-        } catch(e) {}
+        }, (error) => {
+          console.error("Firestore sync error:", error);
+          document.getElementById('syncText').textContent = 'Rule Error';
+          document.getElementById('syncDot').classList.add('error');
+        });
+      } catch (err) {
+        console.error("Connection failed:", err);
       }
     }
 
+    async function pushHouseholdSync(isInitial = false) {
+      if (!db) return;
+      document.getElementById('syncText').textContent = 'Saving...';
+      try {
+        const hhDocRef = window.FB.doc(db, "households", "32birch");
+        await window.FB.setDoc(hhDocRef, { 
+          lists: householdData.lists, 
+          notes: householdData.notes, 
+          favorites: householdData.favorites,
+          good: householdData.good,
+          ratings: householdData.ratings,
+          userTitles: householdData.userTitles,
+          categories: householdData.categories,
+          excludedGenres: householdData.excludedGenres,
+          hideCompleted: householdData.hideCompleted,
+          lastUpdated: Date.now()
+        }, { merge: true });
+        
+        document.getElementById('syncText').textContent = 'Synced';
+        document.getElementById('syncDot').classList.remove('error');
+      } catch (e) {
+        console.error("Save error:", e);
+        document.getElementById('syncText').textContent = 'Save Failed';
+        document.getElementById('syncDot').classList.add('error');
+      }
+    }
     // --- 3. GAMIFICATION & POINTS HELPER ---
     function awardPoints(profile, pts, action) {
       if (!householdData.gamification.points) householdData.gamification.points = {};
